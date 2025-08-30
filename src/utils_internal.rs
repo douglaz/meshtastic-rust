@@ -140,6 +140,7 @@ pub fn build_serial_stream(
 
     // Flush any stale data in the serial buffers
     // This helps prevent sync errors when reconnecting to a device
+    use std::io::Write;
     serial_stream.flush().map_err(|e| Error::StreamBuildError {
         source: Box::new(e),
         description: "Failed to flush serial port".to_string(),
