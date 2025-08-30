@@ -138,6 +138,13 @@ pub fn build_serial_stream(
             description: "Failed to set RTS line".to_string(),
         })?;
 
+    // Flush any stale data in the serial buffers
+    // This helps prevent sync errors when reconnecting to a device
+    serial_stream.flush().map_err(|e| Error::StreamBuildError {
+        source: Box::new(e),
+        description: "Failed to flush serial port".to_string(),
+    })?;
+
     Ok(StreamHandle::from_stream(serial_stream))
 }
 

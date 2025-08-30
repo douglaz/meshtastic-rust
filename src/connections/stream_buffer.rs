@@ -79,12 +79,12 @@ impl StreamBuffer {
                 Ok(packet) => packet,
                 Err(err) => match err {
                     StreamBufferError::MissingHeaderBytes => {
-                        error!("Could not find header sequence [0x94, 0xc3], purging buffer and waiting for more data");
+                        trace!("Could not find header sequence [0x94, 0xc3], purging buffer and waiting for more data");
 
                         break; // Wait for more data
                     }
                     StreamBufferError::IncorrectFramingByte { found_framing_byte } => {
-                        error!(
+                        debug!(
                             "Byte {found_framing_byte} not equal to 0xc3, waiting for more data"
                         );
 
@@ -94,33 +94,33 @@ impl StreamBuffer {
                         buffer_size,
                         packet_size,
                     } => {
-                        error!(
+                        trace!(
                             "Incomplete packet data, expected {packet_size} bytes, found {buffer_size} bytes"
                         );
 
                         break; // Wait for more data
                     }
                     StreamBufferError::MissingMSB { msb_index } => {
-                        error!("Could not find MSB at index {msb_index}, waiting for more data");
+                        trace!("Could not find MSB at index {msb_index}, waiting for more data");
 
                         break; // Wait for more data
                     }
                     StreamBufferError::MissingLSB { lsb_index } => {
-                        error!("Could not find LSB at index {lsb_index}, waiting for more data");
+                        trace!("Could not find LSB at index {lsb_index}, waiting for more data");
 
                         break; // Wait for more data
                     }
                     StreamBufferError::MalformedPacket {
                         next_packet_start_idx,
                     } => {
-                        error!(
+                        debug!(
                               "Detected malformed packet with next packet starting at index {next_packet_start_idx}, purged malformed packet"
                           );
 
                         continue; // Don't need more data to continue, purge from buffer
                     }
                     StreamBufferError::DecodeFailure { .. } => {
-                        error!("Failed to decode chunk from packet, this does not affect the next iteration");
+                        debug!("Failed to decode chunk from packet, this does not affect the next iteration");
 
                         continue; // Don't need more data to continue, ignore decode failure
                     }
@@ -187,7 +187,9 @@ impl StreamBuffer {
 
     fn shift_buffer_to_first_valid_header(&mut self) -> Result<(), StreamBufferError> {
         let framing_index = Self::find_framing_index(&self.buffer).ok_or_else(|| {
-            self.buffer.clear(); // Clear buffer since no packets exist
+            // These bytes are likely debug/log output from the device, not packet data
+            // Clear buffer silently - this is normal during serial communication
+            self.buffer.clear();
             StreamBufferError::MissingHeaderBytes
         })?;
 
