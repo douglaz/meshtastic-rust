@@ -88,10 +88,10 @@ pub struct ModuleSettings {
     #[prost(uint32, tag = "1")]
     pub position_precision: u32,
     ///
-    /// Controls whether or not the phone / clients should mute the current channel
+    /// Controls whether or not the client / device should mute the current channel
     /// Useful for noisy public channels you don't necessarily want to disable
     #[prost(bool, tag = "2")]
-    pub is_client_muted: bool,
+    pub is_muted: bool,
 }
 ///
 /// A pair of a channel number, mode and the (sharable) settings for that channel
@@ -230,6 +230,109 @@ pub struct DeviceUiConfig {
     /// 8 integers for screen calibration data
     #[prost(bytes = "vec", tag = "14")]
     pub calibration_data: ::prost::alloc::vec::Vec<u8>,
+    ///
+    /// Map related data
+    #[prost(message, optional, tag = "15")]
+    pub map_data: ::core::option::Option<Map>,
+    ///
+    /// Compass mode
+    #[prost(enumeration = "CompassMode", tag = "16")]
+    pub compass_mode: i32,
+    ///
+    /// RGB color for BaseUI
+    /// 0xRRGGBB format, e.g. 0xFF0000 for red
+    #[prost(uint32, tag = "17")]
+    pub screen_rgb_color: u32,
+    ///
+    /// Clockface analog style
+    /// true for analog clockface, false for digital clockface
+    #[prost(bool, tag = "18")]
+    pub is_clockface_analog: bool,
+    ///
+    /// How the GPS coordinates are formatted on the OLED screen.
+    #[prost(enumeration = "device_ui_config::GpsCoordinateFormat", tag = "19")]
+    pub gps_format: i32,
+}
+/// Nested message and enum types in `DeviceUIConfig`.
+pub mod device_ui_config {
+    ///
+    /// How the GPS coordinates are displayed on the OLED screen.
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum GpsCoordinateFormat {
+        ///
+        /// GPS coordinates are displayed in the normal decimal degrees format:
+        /// DD.DDDDDD DDD.DDDDDD
+        Dec = 0,
+        ///
+        /// GPS coordinates are displayed in the degrees minutes seconds format:
+        /// DD°MM'SS"C DDD°MM'SS"C, where C is the compass point representing the locations quadrant
+        Dms = 1,
+        ///
+        /// Universal Transverse Mercator format:
+        /// ZZB EEEEEE NNNNNNN, where Z is zone, B is band, E is easting, N is northing
+        Utm = 2,
+        ///
+        /// Military Grid Reference System format:
+        /// ZZB CD EEEEE NNNNN, where Z is zone, B is band, C is the east 100k square, D is the north 100k square,
+        /// E is easting, N is northing
+        Mgrs = 3,
+        ///
+        /// Open Location Code (aka Plus Codes).
+        Olc = 4,
+        ///
+        /// Ordnance Survey Grid Reference (the National Grid System of the UK).
+        /// Format: AB EEEEE NNNNN, where A is the east 100k square, B is the north 100k square,
+        /// E is the easting, N is the northing
+        Osgr = 5,
+        ///
+        /// Maidenhead Locator System
+        /// Described here: <https://en.wikipedia.org/wiki/Maidenhead_Locator_System>
+        Mls = 6,
+    }
+    impl GpsCoordinateFormat {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Dec => "DEC",
+                Self::Dms => "DMS",
+                Self::Utm => "UTM",
+                Self::Mgrs => "MGRS",
+                Self::Olc => "OLC",
+                Self::Osgr => "OSGR",
+                Self::Mls => "MLS",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "DEC" => Some(Self::Dec),
+                "DMS" => Some(Self::Dms),
+                "UTM" => Some(Self::Utm),
+                "MGRS" => Some(Self::Mgrs),
+                "OLC" => Some(Self::Olc),
+                "OSGR" => Some(Self::Osgr),
+                "MLS" => Some(Self::Mls),
+                _ => None,
+            }
+        }
+    }
 }
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
@@ -290,6 +393,80 @@ pub struct NodeHighlight {
     /// Highlight nodes by matching name string
     #[prost(string, tag = "5")]
     pub node_name: ::prost::alloc::string::String,
+}
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct GeoPoint {
+    ///
+    /// Zoom level
+    #[prost(int32, tag = "1")]
+    pub zoom: i32,
+    ///
+    /// Coordinate: latitude
+    #[prost(int32, tag = "2")]
+    pub latitude: i32,
+    ///
+    /// Coordinate: longitude
+    #[prost(int32, tag = "3")]
+    pub longitude: i32,
+}
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct Map {
+    ///
+    /// Home coordinates
+    #[prost(message, optional, tag = "1")]
+    pub home: ::core::option::Option<GeoPoint>,
+    ///
+    /// Map tile style
+    #[prost(string, tag = "2")]
+    pub style: ::prost::alloc::string::String,
+    ///
+    /// Map scroll follows GPS
+    #[prost(bool, tag = "3")]
+    pub follow_gps: bool,
+}
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum CompassMode {
+    ///
+    /// Compass with dynamic ring and heading
+    Dynamic = 0,
+    ///
+    /// Compass with fixed ring and heading
+    FixedRing = 1,
+    ///
+    /// Compass with heading and freeze option
+    FreezeHeading = 2,
+}
+impl CompassMode {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::Dynamic => "DYNAMIC",
+            Self::FixedRing => "FIXED_RING",
+            Self::FreezeHeading => "FREEZE_HEADING",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "DYNAMIC" => Some(Self::Dynamic),
+            "FIXED_RING" => Some(Self::FixedRing),
+            "FREEZE_HEADING" => Some(Self::FreezeHeading),
+            _ => None,
+        }
+    }
 }
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
@@ -386,6 +563,18 @@ pub enum Language {
     /// Slovenian
     Slovenian = 15,
     ///
+    /// Ukrainian
+    Ukrainian = 16,
+    ///
+    /// Bulgarian
+    Bulgarian = 17,
+    ///
+    /// Czech
+    Czech = 18,
+    ///
+    /// Danish
+    Danish = 19,
+    ///
     /// Simplified Chinese (experimental)
     SimplifiedChinese = 30,
     ///
@@ -415,6 +604,10 @@ impl Language {
             Self::Greek => "GREEK",
             Self::Norwegian => "NORWEGIAN",
             Self::Slovenian => "SLOVENIAN",
+            Self::Ukrainian => "UKRAINIAN",
+            Self::Bulgarian => "BULGARIAN",
+            Self::Czech => "CZECH",
+            Self::Danish => "DANISH",
             Self::SimplifiedChinese => "SIMPLIFIED_CHINESE",
             Self::TraditionalChinese => "TRADITIONAL_CHINESE",
         }
@@ -438,6 +631,10 @@ impl Language {
             "GREEK" => Some(Self::Greek),
             "NORWEGIAN" => Some(Self::Norwegian),
             "SLOVENIAN" => Some(Self::Slovenian),
+            "UKRAINIAN" => Some(Self::Ukrainian),
+            "BULGARIAN" => Some(Self::Bulgarian),
+            "CZECH" => Some(Self::Czech),
+            "DANISH" => Some(Self::Danish),
             "SIMPLIFIED_CHINESE" => Some(Self::SimplifiedChinese),
             "TRADITIONAL_CHINESE" => Some(Self::TraditionalChinese),
             _ => None,
@@ -515,6 +712,11 @@ pub mod config {
         /// If true, disable the default blinking LED (LED_PIN) behavior on the device
         #[prost(bool, tag = "12")]
         pub led_heartbeat_disabled: bool,
+        ///
+        /// Controls buzzer behavior for audio feedback
+        /// Defaults to ENABLED
+        #[prost(enumeration = "device_config::BuzzerMode", tag = "13")]
+        pub buzzer_mode: i32,
     }
     /// Nested message and enum types in `DeviceConfig`.
     pub mod device_config {
@@ -549,11 +751,14 @@ pub mod config {
             ///    The wifi radio and the oled screen will be put to sleep.
             ///    This mode may still potentially have higher power usage due to it's preference in message rebroadcasting on the mesh.
             Router = 2,
+            #[deprecated]
             RouterClient = 3,
             ///
             /// Description: Infrastructure node for extending network coverage by relaying messages with minimal overhead. Not visible in Nodes list.
             /// Technical Details: Mesh packets will simply be rebroadcasted over this node. Nodes configured with this role will not originate NodeInfo, Position, Telemetry
             ///    or any other packet type. They will simply rebroadcast any mesh packets on the same frequency, channel num, spread factor, and coding rate.
+            /// Deprecated in v2.7.11 because it creates "holes" in the mesh rebroadcast chain.
+            #[deprecated]
             Repeater = 4,
             ///
             /// Description: Broadcasts GPS position packets as priority.
@@ -599,6 +804,12 @@ pub mod config {
             ///     but should not be given priority over other routers in order to avoid unnecessaraily
             ///     consuming hops.
             RouterLate = 11,
+            ///
+            /// Description: Treats packets from or to favorited nodes as ROUTER_LATE, and all other packets as CLIENT.
+            /// Technical Details: Used for stronger attic/roof nodes to distribute messages more widely
+            ///     from weaker, indoor, or less-well-positioned nodes. Recommended for users with multiple nodes
+            ///     where one CLIENT_BASE acts as a more powerful base station, such as an attic/roof node.
+            ClientBase = 12,
         }
         impl Role {
             /// String value of the enum field names used in the ProtoBuf definition.
@@ -610,7 +821,9 @@ pub mod config {
                     Self::Client => "CLIENT",
                     Self::ClientMute => "CLIENT_MUTE",
                     Self::Router => "ROUTER",
+                    #[allow(deprecated)]
                     Self::RouterClient => "ROUTER_CLIENT",
+                    #[allow(deprecated)]
                     Self::Repeater => "REPEATER",
                     Self::Tracker => "TRACKER",
                     Self::Sensor => "SENSOR",
@@ -619,6 +832,7 @@ pub mod config {
                     Self::LostAndFound => "LOST_AND_FOUND",
                     Self::TakTracker => "TAK_TRACKER",
                     Self::RouterLate => "ROUTER_LATE",
+                    Self::ClientBase => "CLIENT_BASE",
                 }
             }
             /// Creates an enum from field names used in the ProtoBuf definition.
@@ -627,8 +841,8 @@ pub mod config {
                     "CLIENT" => Some(Self::Client),
                     "CLIENT_MUTE" => Some(Self::ClientMute),
                     "ROUTER" => Some(Self::Router),
-                    "ROUTER_CLIENT" => Some(Self::RouterClient),
-                    "REPEATER" => Some(Self::Repeater),
+                    "ROUTER_CLIENT" => Some(#[allow(deprecated)] Self::RouterClient),
+                    "REPEATER" => Some(#[allow(deprecated)] Self::Repeater),
                     "TRACKER" => Some(Self::Tracker),
                     "SENSOR" => Some(Self::Sensor),
                     "TAK" => Some(Self::Tak),
@@ -636,6 +850,7 @@ pub mod config {
                     "LOST_AND_FOUND" => Some(Self::LostAndFound),
                     "TAK_TRACKER" => Some(Self::TakTracker),
                     "ROUTER_LATE" => Some(Self::RouterLate),
+                    "CLIENT_BASE" => Some(Self::ClientBase),
                     _ => None,
                 }
             }
@@ -706,6 +921,73 @@ pub mod config {
                     "KNOWN_ONLY" => Some(Self::KnownOnly),
                     "NONE" => Some(Self::None),
                     "CORE_PORTNUMS_ONLY" => Some(Self::CorePortnumsOnly),
+                    _ => None,
+                }
+            }
+        }
+        ///
+        /// Defines buzzer behavior for audio feedback
+        #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+        #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+        #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+        #[derive(
+            Clone,
+            Copy,
+            Debug,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            ::prost::Enumeration
+        )]
+        #[repr(i32)]
+        pub enum BuzzerMode {
+            ///
+            /// Default behavior.
+            /// Buzzer is enabled for all audio feedback including button presses and alerts.
+            AllEnabled = 0,
+            ///
+            /// Disabled.
+            /// All buzzer audio feedback is disabled.
+            Disabled = 1,
+            ///
+            /// Notifications Only.
+            /// Buzzer is enabled only for notifications and alerts, but not for button presses.
+            /// External notification config determines the specifics of the notification behavior.
+            NotificationsOnly = 2,
+            ///
+            /// Non-notification system buzzer tones only.
+            /// Buzzer is enabled only for non-notification tones such as button presses, startup, shutdown, but not for alerts.
+            SystemOnly = 3,
+            ///
+            /// Direct Message notifications only.
+            /// Buzzer is enabled only for direct messages and alerts, but not for button presses.
+            /// External notification config determines the specifics of the notification behavior.
+            DirectMsgOnly = 4,
+        }
+        impl BuzzerMode {
+            /// String value of the enum field names used in the ProtoBuf definition.
+            ///
+            /// The values are not transformed in any way and thus are considered stable
+            /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+            pub fn as_str_name(&self) -> &'static str {
+                match self {
+                    Self::AllEnabled => "ALL_ENABLED",
+                    Self::Disabled => "DISABLED",
+                    Self::NotificationsOnly => "NOTIFICATIONS_ONLY",
+                    Self::SystemOnly => "SYSTEM_ONLY",
+                    Self::DirectMsgOnly => "DIRECT_MSG_ONLY",
+                }
+            }
+            /// Creates an enum from field names used in the ProtoBuf definition.
+            pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+                match value {
+                    "ALL_ENABLED" => Some(Self::AllEnabled),
+                    "DISABLED" => Some(Self::Disabled),
+                    "NOTIFICATIONS_ONLY" => Some(Self::NotificationsOnly),
+                    "SYSTEM_ONLY" => Some(Self::SystemOnly),
+                    "DIRECT_MSG_ONLY" => Some(Self::DirectMsgOnly),
                     _ => None,
                 }
             }
@@ -1007,7 +1289,7 @@ pub mod config {
         #[prost(string, tag = "4")]
         pub wifi_psk: ::prost::alloc::string::String,
         ///
-        /// NTP server to use if WiFi is conneced, defaults to `0.pool.ntp.org`
+        /// NTP server to use if WiFi is conneced, defaults to `meshtastic.pool.ntp.org`
         #[prost(string, tag = "5")]
         pub ntp_server: ::prost::alloc::string::String,
         ///
@@ -1030,6 +1312,10 @@ pub mod config {
         /// Flags for enabling/disabling network protocols
         #[prost(uint32, tag = "10")]
         pub enabled_protocols: u32,
+        ///
+        /// Enable/Disable ipv6 support
+        #[prost(bool, tag = "11")]
+        pub ipv6_enabled: bool,
     }
     /// Nested message and enum types in `NetworkConfig`.
     pub mod network_config {
@@ -1157,8 +1443,13 @@ pub mod config {
         #[prost(uint32, tag = "1")]
         pub screen_on_secs: u32,
         ///
+        /// Deprecated in 2.7.4: Unused
         /// How the GPS coordinates are formatted on the OLED screen.
-        #[prost(enumeration = "display_config::GpsCoordinateFormat", tag = "2")]
+        #[deprecated]
+        #[prost(
+            enumeration = "display_config::DeprecatedGpsCoordinateFormat",
+            tag = "2"
+        )]
         pub gps_format: i32,
         ///
         /// Automatically toggles to the next page on the screen like a carousel, based the specified interval in seconds.
@@ -1168,6 +1459,7 @@ pub mod config {
         ///
         /// If this is set, the displayed compass will always point north. if unset, the old behaviour
         /// (top of display is heading direction) is used.
+        #[deprecated]
         #[prost(bool, tag = "4")]
         pub compass_north_top: bool,
         ///
@@ -1203,11 +1495,20 @@ pub mod config {
         /// If true, the device will display the time in 12-hour format on screen.
         #[prost(bool, tag = "12")]
         pub use_12h_clock: bool,
+        ///
+        /// If false (default), the device will use short names for various display screens.
+        /// If true, node names will show in long format
+        #[prost(bool, tag = "13")]
+        pub use_long_node_name: bool,
+        ///
+        /// If true, the device will display message bubbles on screen.
+        #[prost(bool, tag = "14")]
+        pub enable_message_bubbles: bool,
     }
     /// Nested message and enum types in `DisplayConfig`.
     pub mod display_config {
         ///
-        /// How the GPS coordinates are displayed on the OLED screen.
+        /// Deprecated in 2.7.4: Unused
         #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
         #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
         #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
@@ -1223,57 +1524,23 @@ pub mod config {
             ::prost::Enumeration
         )]
         #[repr(i32)]
-        pub enum GpsCoordinateFormat {
-            ///
-            /// GPS coordinates are displayed in the normal decimal degrees format:
-            /// DD.DDDDDD DDD.DDDDDD
-            Dec = 0,
-            ///
-            /// GPS coordinates are displayed in the degrees minutes seconds format:
-            /// DD°MM'SS"C DDD°MM'SS"C, where C is the compass point representing the locations quadrant
-            Dms = 1,
-            ///
-            /// Universal Transverse Mercator format:
-            /// ZZB EEEEEE NNNNNNN, where Z is zone, B is band, E is easting, N is northing
-            Utm = 2,
-            ///
-            /// Military Grid Reference System format:
-            /// ZZB CD EEEEE NNNNN, where Z is zone, B is band, C is the east 100k square, D is the north 100k square,
-            /// E is easting, N is northing
-            Mgrs = 3,
-            ///
-            /// Open Location Code (aka Plus Codes).
-            Olc = 4,
-            ///
-            /// Ordnance Survey Grid Reference (the National Grid System of the UK).
-            /// Format: AB EEEEE NNNNN, where A is the east 100k square, B is the north 100k square,
-            /// E is the easting, N is the northing
-            Osgr = 5,
+        pub enum DeprecatedGpsCoordinateFormat {
+            Unused = 0,
         }
-        impl GpsCoordinateFormat {
+        impl DeprecatedGpsCoordinateFormat {
             /// String value of the enum field names used in the ProtoBuf definition.
             ///
             /// The values are not transformed in any way and thus are considered stable
             /// (if the ProtoBuf definition does not change) and safe for programmatic use.
             pub fn as_str_name(&self) -> &'static str {
                 match self {
-                    Self::Dec => "DEC",
-                    Self::Dms => "DMS",
-                    Self::Utm => "UTM",
-                    Self::Mgrs => "MGRS",
-                    Self::Olc => "OLC",
-                    Self::Osgr => "OSGR",
+                    Self::Unused => "UNUSED",
                 }
             }
             /// Creates an enum from field names used in the ProtoBuf definition.
             pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
                 match value {
-                    "DEC" => Some(Self::Dec),
-                    "DMS" => Some(Self::Dms),
-                    "UTM" => Some(Self::Utm),
-                    "MGRS" => Some(Self::Mgrs),
-                    "OLC" => Some(Self::Olc),
-                    "OSGR" => Some(Self::Osgr),
+                    "UNUSED" => Some(Self::Unused),
                     _ => None,
                 }
             }
@@ -1342,17 +1609,23 @@ pub mod config {
         #[repr(i32)]
         pub enum OledType {
             ///
-            /// Default / Auto
+            /// Default / Autodetect
             OledAuto = 0,
             ///
-            /// Default / Auto
+            /// Default / Autodetect
             OledSsd1306 = 1,
             ///
-            /// Default / Auto
+            /// Default / Autodetect
             OledSh1106 = 2,
             ///
-            /// Can not be auto detected but set by proto. Used for 128x128 screens
+            /// Can not be auto detected but set by proto. Used for 128x64 screens
             OledSh1107 = 3,
+            ///
+            /// Can not be auto detected but set by proto. Used for 128x128 screens
+            OledSh1107128128 = 4,
+            ///
+            /// Can not be auto detected but set by proto. Used for 64x128 rotated screens
+            OledSh1107Rotated = 5,
         }
         impl OledType {
             /// String value of the enum field names used in the ProtoBuf definition.
@@ -1365,6 +1638,8 @@ pub mod config {
                     Self::OledSsd1306 => "OLED_SSD1306",
                     Self::OledSh1106 => "OLED_SH1106",
                     Self::OledSh1107 => "OLED_SH1107",
+                    Self::OledSh1107128128 => "OLED_SH1107_128_128",
+                    Self::OledSh1107Rotated => "OLED_SH1107_ROTATED",
                 }
             }
             /// Creates an enum from field names used in the ProtoBuf definition.
@@ -1374,6 +1649,8 @@ pub mod config {
                     "OLED_SSD1306" => Some(Self::OledSsd1306),
                     "OLED_SH1106" => Some(Self::OledSh1106),
                     "OLED_SH1107" => Some(Self::OledSh1107),
+                    "OLED_SH1107_128_128" => Some(Self::OledSh1107128128),
+                    "OLED_SH1107_ROTATED" => Some(Self::OledSh1107Rotated),
                     _ => None,
                 }
             }
@@ -1615,6 +1892,14 @@ pub mod config {
         /// Sets the ok_to_mqtt bit on outgoing packets
         #[prost(bool, tag = "105")]
         pub config_ok_to_mqtt: bool,
+        ///
+        /// Set where LORA FEM is enabled, disabled, or not present
+        #[prost(enumeration = "lo_ra_config::FemLnaMode", tag = "106")]
+        pub fem_lna_mode: i32,
+        ///
+        /// Don't use radiolib to initialize the radio, instead listen for a serialHal connection
+        #[prost(bool, tag = "107")]
+        pub serial_hal_only: bool,
     }
     /// Nested message and enum types in `LoRaConfig`.
     pub mod lo_ra_config {
@@ -1700,6 +1985,40 @@ pub mod config {
             ///
             /// Philippines 915mhz
             Ph915 = 21,
+            ///
+            /// Australia / New Zealand 433MHz
+            Anz433 = 22,
+            ///
+            /// Kazakhstan 433MHz
+            Kz433 = 23,
+            ///
+            /// Kazakhstan 863MHz
+            Kz863 = 24,
+            ///
+            /// Nepal 865MHz
+            Np865 = 25,
+            ///
+            /// Brazil 902MHz
+            Br902 = 26,
+            ///
+            /// ITU Region 1 Amateur Radio 2m band (144-146 MHz)
+            Itu12m = 27,
+            ///
+            /// ITU Region 2 Amateur Radio 2m band (144-148 MHz)
+            Itu22m = 28,
+            ///
+            /// EU 866MHz band (Band no. 47b of 2006/771/EC and subsequent amendments) for Non-specific short-range devices (SRD)
+            Eu866 = 29,
+            ///
+            /// EU 874MHz and 917MHz bands (Band no. 1 and 4 of 2022/172/EC and subsequent amendments) for Non-specific short-range devices (SRD)
+            Eu874 = 30,
+            Eu917 = 31,
+            ///
+            /// EU 868MHz band, with narrow presets
+            EuN868 = 32,
+            ///
+            /// ITU Region 3 Amateur Radio 2m band (144-148 MHz)
+            Itu32m = 33,
         }
         impl RegionCode {
             /// String value of the enum field names used in the ProtoBuf definition.
@@ -1730,6 +2049,18 @@ pub mod config {
                     Self::Ph433 => "PH_433",
                     Self::Ph868 => "PH_868",
                     Self::Ph915 => "PH_915",
+                    Self::Anz433 => "ANZ_433",
+                    Self::Kz433 => "KZ_433",
+                    Self::Kz863 => "KZ_863",
+                    Self::Np865 => "NP_865",
+                    Self::Br902 => "BR_902",
+                    Self::Itu12m => "ITU1_2M",
+                    Self::Itu22m => "ITU2_2M",
+                    Self::Eu866 => "EU_866",
+                    Self::Eu874 => "EU_874",
+                    Self::Eu917 => "EU_917",
+                    Self::EuN868 => "EU_N_868",
+                    Self::Itu32m => "ITU3_2M",
                 }
             }
             /// Creates an enum from field names used in the ProtoBuf definition.
@@ -1757,6 +2088,18 @@ pub mod config {
                     "PH_433" => Some(Self::Ph433),
                     "PH_868" => Some(Self::Ph868),
                     "PH_915" => Some(Self::Ph915),
+                    "ANZ_433" => Some(Self::Anz433),
+                    "KZ_433" => Some(Self::Kz433),
+                    "KZ_863" => Some(Self::Kz863),
+                    "NP_865" => Some(Self::Np865),
+                    "BR_902" => Some(Self::Br902),
+                    "ITU1_2M" => Some(Self::Itu12m),
+                    "ITU2_2M" => Some(Self::Itu22m),
+                    "EU_866" => Some(Self::Eu866),
+                    "EU_874" => Some(Self::Eu874),
+                    "EU_917" => Some(Self::Eu917),
+                    "EU_N_868" => Some(Self::EuN868),
+                    "ITU3_2M" => Some(Self::Itu32m),
                     _ => None,
                 }
             }
@@ -1785,10 +2128,13 @@ pub mod config {
             LongFast = 0,
             ///
             /// Long Range - Slow
+            /// Deprecated in 2.7: Unpopular slow preset.
+            #[deprecated]
             LongSlow = 1,
             ///
             /// Very Long Range - Slow
             /// Deprecated in 2.5: Works only with txco and is unusably slow
+            #[deprecated]
             VeryLongSlow = 2,
             ///
             /// Medium Range - Slow
@@ -1810,6 +2156,31 @@ pub mod config {
             /// This is the fastest preset and the only one with 500kHz bandwidth.
             /// It is not legal to use in all regions due to this wider bandwidth.
             ShortTurbo = 8,
+            ///
+            /// Long Range - Turbo
+            /// This preset performs similarly to LongFast, but with 500Khz bandwidth.
+            LongTurbo = 9,
+            ///
+            /// Lite Fast
+            /// Medium range preset optimized for EU 866MHz SRD band with 125kHz bandwidth.
+            /// Comparable link budget to MEDIUM_FAST but compliant with Band no. 47b of 2006/771/EC.
+            LiteFast = 10,
+            ///
+            /// Lite Slow
+            /// Medium-to-moderate range preset optimized for EU 866MHz SRD band with 125kHz bandwidth.
+            /// Comparable link budget to LONG_FAST but compliant with Band no. 47b of 2006/771/EC.
+            LiteSlow = 11,
+            ///
+            /// Narrow Fast
+            /// Medium-to-moderate range preset optimized for EU 868MHz band with 62.5kHz bandwidth.
+            /// Comparable link budget to SHORT_SLOW, but with half the data rate.
+            /// Intended to avoid interference with other devices.
+            NarrowFast = 12,
+            ///
+            /// Narrow Slow
+            /// Moderate range preset optimized for EU 868MHz band with 62.5kHz bandwidth.
+            /// Comparable link budget and data rate to LONG_FAST.
+            NarrowSlow = 13,
         }
         impl ModemPreset {
             /// String value of the enum field names used in the ProtoBuf definition.
@@ -1819,7 +2190,9 @@ pub mod config {
             pub fn as_str_name(&self) -> &'static str {
                 match self {
                     Self::LongFast => "LONG_FAST",
+                    #[allow(deprecated)]
                     Self::LongSlow => "LONG_SLOW",
+                    #[allow(deprecated)]
                     Self::VeryLongSlow => "VERY_LONG_SLOW",
                     Self::MediumSlow => "MEDIUM_SLOW",
                     Self::MediumFast => "MEDIUM_FAST",
@@ -1827,20 +2200,78 @@ pub mod config {
                     Self::ShortFast => "SHORT_FAST",
                     Self::LongModerate => "LONG_MODERATE",
                     Self::ShortTurbo => "SHORT_TURBO",
+                    Self::LongTurbo => "LONG_TURBO",
+                    Self::LiteFast => "LITE_FAST",
+                    Self::LiteSlow => "LITE_SLOW",
+                    Self::NarrowFast => "NARROW_FAST",
+                    Self::NarrowSlow => "NARROW_SLOW",
                 }
             }
             /// Creates an enum from field names used in the ProtoBuf definition.
             pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
                 match value {
                     "LONG_FAST" => Some(Self::LongFast),
-                    "LONG_SLOW" => Some(Self::LongSlow),
-                    "VERY_LONG_SLOW" => Some(Self::VeryLongSlow),
+                    "LONG_SLOW" => Some(#[allow(deprecated)] Self::LongSlow),
+                    "VERY_LONG_SLOW" => Some(#[allow(deprecated)] Self::VeryLongSlow),
                     "MEDIUM_SLOW" => Some(Self::MediumSlow),
                     "MEDIUM_FAST" => Some(Self::MediumFast),
                     "SHORT_SLOW" => Some(Self::ShortSlow),
                     "SHORT_FAST" => Some(Self::ShortFast),
                     "LONG_MODERATE" => Some(Self::LongModerate),
                     "SHORT_TURBO" => Some(Self::ShortTurbo),
+                    "LONG_TURBO" => Some(Self::LongTurbo),
+                    "LITE_FAST" => Some(Self::LiteFast),
+                    "LITE_SLOW" => Some(Self::LiteSlow),
+                    "NARROW_FAST" => Some(Self::NarrowFast),
+                    "NARROW_SLOW" => Some(Self::NarrowSlow),
+                    _ => None,
+                }
+            }
+        }
+        #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+        #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+        #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+        #[derive(
+            Clone,
+            Copy,
+            Debug,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            ::prost::Enumeration
+        )]
+        #[repr(i32)]
+        pub enum FemLnaMode {
+            ///
+            /// FEM_LNA is present but disabled
+            Disabled = 0,
+            ///
+            /// FEM_LNA is present and enabled
+            Enabled = 1,
+            ///
+            /// FEM_LNA is not present on the device
+            NotPresent = 2,
+        }
+        impl FemLnaMode {
+            /// String value of the enum field names used in the ProtoBuf definition.
+            ///
+            /// The values are not transformed in any way and thus are considered stable
+            /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+            pub fn as_str_name(&self) -> &'static str {
+                match self {
+                    Self::Disabled => "DISABLED",
+                    Self::Enabled => "ENABLED",
+                    Self::NotPresent => "NOT_PRESENT",
+                }
+            }
+            /// Creates an enum from field names used in the ProtoBuf definition.
+            pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+                match value {
+                    "DISABLED" => Some(Self::Disabled),
+                    "ENABLED" => Some(Self::Enabled),
+                    "NOT_PRESENT" => Some(Self::NotPresent),
                     _ => None,
                 }
             }
@@ -2104,6 +2535,2983 @@ pub struct SerialConnectionStatus {
     pub is_connected: bool,
 }
 ///
+/// Packets for the official ATAK Plugin
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct TakPacket {
+    ///
+    /// Are the payloads strings compressed for LoRA transport?
+    #[prost(bool, tag = "1")]
+    pub is_compressed: bool,
+    ///
+    /// The contact / callsign for ATAK user
+    #[prost(message, optional, tag = "2")]
+    pub contact: ::core::option::Option<Contact>,
+    ///
+    /// The group for ATAK user
+    #[prost(message, optional, tag = "3")]
+    pub group: ::core::option::Option<Group>,
+    ///
+    /// The status of the ATAK EUD
+    #[prost(message, optional, tag = "4")]
+    pub status: ::core::option::Option<Status>,
+    ///
+    /// The payload of the packet
+    #[prost(oneof = "tak_packet::PayloadVariant", tags = "5, 6, 7")]
+    pub payload_variant: ::core::option::Option<tak_packet::PayloadVariant>,
+}
+/// Nested message and enum types in `TAKPacket`.
+pub mod tak_packet {
+    ///
+    /// The payload of the packet
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum PayloadVariant {
+        ///
+        /// TAK position report
+        #[prost(message, tag = "5")]
+        Pli(super::Pli),
+        ///
+        /// ATAK GeoChat message
+        #[prost(message, tag = "6")]
+        Chat(super::GeoChat),
+        ///
+        /// Generic CoT detail XML
+        /// May be compressed / truncated by the sender (EUD)
+        #[prost(bytes, tag = "7")]
+        Detail(::prost::alloc::vec::Vec<u8>),
+    }
+}
+///
+/// ATAK GeoChat message
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct GeoChat {
+    ///
+    /// The text message. Empty for receipts.
+    #[prost(string, tag = "1")]
+    pub message: ::prost::alloc::string::String,
+    ///
+    /// Uid recipient of the message
+    #[prost(string, optional, tag = "2")]
+    pub to: ::core::option::Option<::prost::alloc::string::String>,
+    ///
+    /// Callsign of the recipient for the message
+    #[prost(string, optional, tag = "3")]
+    pub to_callsign: ::core::option::Option<::prost::alloc::string::String>,
+    ///
+    /// UID of the chat message this event is acknowledging. Empty for a
+    /// normal chat message; set for delivered / read receipts. Paired with
+    /// receipt_type so receivers can match the ack back to the original
+    /// outbound GeoChat by its event uid.
+    #[prost(string, tag = "4")]
+    pub receipt_for_uid: ::prost::alloc::string::String,
+    ///
+    /// Receipt kind discriminator. See ReceiptType doc. Default ReceiptType_None
+    /// means this is a regular chat message, not a receipt.
+    #[prost(enumeration = "geo_chat::ReceiptType", tag = "5")]
+    pub receipt_type: i32,
+    ///
+    /// BCP-47-ish language tag or human-readable name (e.g. "en", "English")
+    /// that the originator's TAKTALK plugin recorded for the message.
+    #[prost(string, optional, tag = "6")]
+    pub lang: ::core::option::Option<::prost::alloc::string::String>,
+    ///
+    /// TAKTALK chatroom UUID (e.g. "30b2755c-c547-44ef-a0cc-cdbd8a15616f") that
+    /// the receiver's TAKTALK plugin uses to thread the message under the
+    /// right room. Resolved to a friendly name via TakTalkRoomData broadcasts.
+    #[prost(string, optional, tag = "7")]
+    pub room_id: ::core::option::Option<::prost::alloc::string::String>,
+    ///
+    /// TAKTALK voice profile pointer. Often empty in practice (the empty
+    /// marker `<voice_profile_id/>` still signals TAKTALK origination), so
+    /// receivers should treat empty-but-present as the equivalent of the
+    /// marker rather than a missing field.
+    #[prost(string, optional, tag = "8")]
+    pub voice_profile_id: ::core::option::Option<::prost::alloc::string::String>,
+}
+/// Nested message and enum types in `GeoChat`.
+pub mod geo_chat {
+    ///
+    /// Receipt discriminator. Set alongside cot_type_id = b-t-f-d (delivered)
+    /// or b-t-f-r (read). ReceiptType_None is the default for a normal chat
+    /// message (cot_type_id = b-t-f).
+    ///
+    /// Receivers can detect a receipt by checking receipt_type != ReceiptType_None
+    /// without re-parsing the envelope cot_type_id.
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum ReceiptType {
+        /// normal chat message
+        None = 0,
+        /// b-t-f-d delivered receipt
+        Delivered = 1,
+        /// b-t-f-r read receipt
+        Read = 2,
+    }
+    impl ReceiptType {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::None => "ReceiptType_None",
+                Self::Delivered => "ReceiptType_Delivered",
+                Self::Read => "ReceiptType_Read",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "ReceiptType_None" => Some(Self::None),
+                "ReceiptType_Delivered" => Some(Self::Delivered),
+                "ReceiptType_Read" => Some(Self::Read),
+                _ => None,
+            }
+        }
+    }
+}
+///
+/// ATAK Group
+/// <__group role='Team Member' name='Cyan'/>
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct Group {
+    ///
+    /// Role of the group member
+    #[prost(enumeration = "MemberRole", tag = "1")]
+    pub role: i32,
+    ///
+    /// Team (color)
+    /// Default Cyan
+    #[prost(enumeration = "Team", tag = "2")]
+    pub team: i32,
+}
+///
+/// ATAK EUD Status
+/// <status battery='100' />
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct Status {
+    ///
+    /// Battery level
+    #[prost(uint32, tag = "1")]
+    pub battery: u32,
+}
+///
+/// ATAK Contact
+/// <contact endpoint='0.0.0.0:4242:tcp' phone='+12345678' callsign='FALKE'/>
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct Contact {
+    ///
+    /// Callsign
+    #[prost(string, tag = "1")]
+    pub callsign: ::prost::alloc::string::String,
+    ///
+    /// Device callsign
+    ///
+    ///
+    /// IP address of endpoint in integer form (0.0.0.0 default)
+    #[prost(string, tag = "2")]
+    pub device_callsign: ::prost::alloc::string::String,
+}
+///
+/// Position Location Information from ATAK
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct Pli {
+    ///
+    /// The new preferred location encoding, multiply by 1e-7 to get degrees
+    /// in floating point
+    #[prost(sfixed32, tag = "1")]
+    pub latitude_i: i32,
+    ///
+    /// The new preferred location encoding, multiply by 1e-7 to get degrees
+    /// in floating point
+    #[prost(sfixed32, tag = "2")]
+    pub longitude_i: i32,
+    ///
+    /// Altitude (ATAK prefers HAE)
+    #[prost(int32, tag = "3")]
+    pub altitude: i32,
+    ///
+    /// Speed
+    #[prost(uint32, tag = "4")]
+    pub speed: u32,
+    ///
+    /// Course in degrees
+    #[prost(uint32, tag = "5")]
+    pub course: u32,
+}
+///
+/// Aircraft track information from ADS-B or military air tracking.
+/// Covers the majority of observed real-world CoT traffic.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct AircraftTrack {
+    ///
+    /// ICAO hex identifier (e.g. "AD237C")
+    #[prost(string, tag = "1")]
+    pub icao: ::prost::alloc::string::String,
+    ///
+    /// Aircraft registration (e.g. "N946AK")
+    #[prost(string, tag = "2")]
+    pub registration: ::prost::alloc::string::String,
+    ///
+    /// Flight number/callsign (e.g. "ASA864")
+    #[prost(string, tag = "3")]
+    pub flight: ::prost::alloc::string::String,
+    ///
+    /// ICAO aircraft type designator (e.g. "B39M")
+    #[prost(string, tag = "4")]
+    pub aircraft_type: ::prost::alloc::string::String,
+    ///
+    /// Transponder squawk code (0-7777 octal)
+    #[prost(uint32, tag = "5")]
+    pub squawk: u32,
+    ///
+    /// ADS-B emitter category (e.g. "A3")
+    #[prost(string, tag = "6")]
+    pub category: ::prost::alloc::string::String,
+    ///
+    /// Received signal strength * 10 (e.g. -194 for -19.4 dBm)
+    #[prost(sint32, tag = "7")]
+    pub rssi_x10: i32,
+    ///
+    /// Whether receiver has GPS fix
+    #[prost(bool, tag = "8")]
+    pub gps: bool,
+    ///
+    /// CoT host ID for source attribution
+    #[prost(string, tag = "9")]
+    pub cot_host_id: ::prost::alloc::string::String,
+}
+///
+/// Compact geographic vertex used by repeated vertex lists in TAK geometry
+/// payloads. Named with a `Cot` prefix to avoid a namespace collision with
+/// `meshtastic.GeoPoint` in `device_ui.proto`, which is an unrelated zoom/
+/// latitude/longitude type used by the on-device map UI.
+///
+/// Encoded as a signed DELTA from TAKPacketV2.latitude_i / longitude_i (the
+/// enclosing event's anchor point). The absolute coordinate is recovered by
+/// the receiver as `event.latitude_i + vertex.lat_delta_i` (and likewise for
+/// longitude).
+///
+/// Why deltas: a 32-vertex telestration with vertices clustered within a few
+/// hundred meters of the anchor has per-vertex deltas in the ±10^4 range.
+/// Under sint32+zigzag those encode as 2 bytes each (tag+varint), versus the
+/// 4 bytes that sfixed32 would always require. At 32 vertices that is ~128
+/// bytes of savings — the difference between fitting under the LoRa MTU or
+/// not. Absolute coordinates (values ~10^9) would cost sint32 varint 5 bytes
+/// per field, which is why TAKPacketV2's top-level latitude_i / longitude_i
+/// stay sfixed32 — only small values win with sint32.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct CotGeoPoint {
+    ///
+    /// Latitude delta from TAKPacketV2.latitude_i, in 1e-7 degree units.
+    /// Add to the enclosing event's latitude_i to recover the absolute latitude.
+    #[prost(sint32, tag = "1")]
+    pub lat_delta_i: i32,
+    ///
+    /// Longitude delta from TAKPacketV2.longitude_i, in 1e-7 degree units.
+    #[prost(sint32, tag = "2")]
+    pub lon_delta_i: i32,
+}
+///
+/// User-drawn tactical graphic: circle, rectangle, polygon, polyline, freehand
+/// telestration, ranging circle, or bullseye.
+///
+/// Covers CoT types u-d-c-c, u-d-r, u-d-f, u-d-f-m, u-d-p, u-r-b-c-c,
+/// u-r-b-bullseye. The shape's anchor position is carried on
+/// TAKPacketV2.latitude_i/longitude_i; polyline/polygon vertices are in the
+/// `vertices` repeated field as `CotGeoPoint` deltas from that anchor.
+///
+/// Colors use the Team enum as a 14-color palette (see color encoding below)
+/// with a fixed32 exact-ARGB fallback for custom user-picked colors that
+/// don't map to a palette entry.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct DrawnShape {
+    ///
+    /// Shape kind (circle, rectangle, freeform, etc.)
+    #[prost(enumeration = "drawn_shape::Kind", tag = "1")]
+    pub kind: i32,
+    ///
+    /// Explicit stroke/fill/both discriminator. See StyleMode doc.
+    #[prost(enumeration = "drawn_shape::StyleMode", tag = "2")]
+    pub style: i32,
+    ///
+    /// Ellipse major radius in centimeters. 0 for non-ellipse kinds.
+    #[prost(uint32, tag = "3")]
+    pub major_cm: u32,
+    ///
+    /// Ellipse minor radius in centimeters. 0 for non-ellipse kinds.
+    #[prost(uint32, tag = "4")]
+    pub minor_cm: u32,
+    ///
+    /// Ellipse rotation angle in degrees. Valid values are 0..360 inclusive;
+    /// 0 and 360 are equivalent rotations. In proto3, an unset uint32 reads
+    /// as 0, so senders should emit 0 when the angle is unspecified.
+    #[prost(uint32, tag = "5")]
+    pub angle_deg: u32,
+    ///
+    /// Stroke color as a named palette entry from the Team enum. If
+    /// Unspecifed_Color, the exact ARGB is carried in stroke_argb.
+    /// Valid only when style is StrokeOnly or StrokeAndFill.
+    #[prost(enumeration = "Team", tag = "6")]
+    pub stroke_color: i32,
+    ///
+    /// Stroke color as an exact 32-bit ARGB bit pattern. Always populated
+    /// on the wire; readers MUST use this value when stroke_color ==
+    /// Unspecifed_Color and MAY use it to recover the exact original bytes
+    /// even when a palette entry is set.
+    #[prost(fixed32, tag = "7")]
+    pub stroke_argb: u32,
+    ///
+    /// Stroke weight in tenths of a unit (e.g. 30 = 3.0). Typical ATAK
+    /// range 10..60.
+    #[prost(uint32, tag = "8")]
+    pub stroke_weight_x10: u32,
+    ///
+    /// Fill color as a named palette entry. See stroke_color docs.
+    /// Valid only when style is FillOnly or StrokeAndFill.
+    #[prost(enumeration = "Team", tag = "9")]
+    pub fill_color: i32,
+    ///
+    /// Fill color exact ARGB fallback. See stroke_argb docs.
+    #[prost(fixed32, tag = "10")]
+    pub fill_argb: u32,
+    ///
+    /// Whether labels are rendered on this shape.
+    #[prost(bool, tag = "11")]
+    pub labels_on: bool,
+    #[prost(sint32, repeated, tag = "18")]
+    pub vertex_lat_deltas: ::prost::alloc::vec::Vec<i32>,
+    #[prost(sint32, repeated, tag = "19")]
+    pub vertex_lon_deltas: ::prost::alloc::vec::Vec<i32>,
+    ///
+    /// True if the sender truncated the vertex columns to fit the pool.
+    ///
+    /// --- Bullseye-only fields. All ignored unless kind == Kind_Bullseye. ---
+    #[prost(bool, tag = "13")]
+    pub truncated: bool,
+    ///
+    /// Bullseye distance in meters * 10 (e.g. 3285 = 328.5 m). 0 = unset.
+    #[prost(uint32, tag = "14")]
+    pub bullseye_distance_dm: u32,
+    ///
+    /// Bullseye bearing reference: 0 unset, 1 Magnetic, 2 True, 3 Grid.
+    #[prost(uint32, tag = "15")]
+    pub bullseye_bearing_ref: u32,
+    ///
+    /// Bullseye attribute bit flags:
+    ///    bit 0: rangeRingVisible
+    ///    bit 1: hasRangeRings
+    ///    bit 2: edgeToCenter
+    ///    bit 3: mils
+    #[prost(uint32, tag = "16")]
+    pub bullseye_flags: u32,
+    ///
+    /// Bullseye reference UID (anchor marker). Empty = anchor is self.
+    #[prost(string, tag = "17")]
+    pub bullseye_uid_ref: ::prost::alloc::string::String,
+}
+/// Nested message and enum types in `DrawnShape`.
+pub mod drawn_shape {
+    ///
+    /// Shape kind discriminator. Drives receiver rendering and also controls
+    /// which optional fields below are meaningful.
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum Kind {
+        ///
+        /// Unspecified (do not use on the wire)
+        Unspecified = 0,
+        ///
+        /// u-d-c-c: User-drawn circle (uses major/minor/angle, anchor = event point)
+        Circle = 1,
+        ///
+        /// u-d-r: User-drawn rectangle (uses vertices = 4 corners)
+        Rectangle = 2,
+        ///
+        /// u-d-f: User-drawn polyline (uses vertices, not closed)
+        Freeform = 3,
+        ///
+        /// u-d-f-m: Freehand telestration / annotation (uses vertices, may be truncated)
+        Telestration = 4,
+        ///
+        /// u-d-p: Closed polygon (uses vertices, implicitly closed)
+        Polygon = 5,
+        ///
+        /// u-r-b-c-c: Ranging circle (major/minor/angle, stroke + optional fill)
+        RangingCircle = 6,
+        ///
+        /// u-r-b-bullseye: Bullseye ring with range rings and bearing reference
+        Bullseye = 7,
+        ///
+        /// u-d-c-e: Ellipse with distinct major/minor axes (same storage as
+        /// Kind_Circle — uses major_cm/minor_cm/angle_deg — but receivers
+        /// render it as a non-circular ellipse rather than a round circle).
+        Ellipse = 8,
+        ///
+        /// u-d-v: 2D vehicle outline drawn on the map. Vertices carry the
+        /// outline polygon; receivers draw it as a filled polygon.
+        Vehicle2D = 9,
+        ///
+        /// u-d-v-m: 3D vehicle model reference. Same vertex polygon as
+        /// Kind_Vehicle2D; receivers that support 3D rendering extrude it.
+        Vehicle3D = 10,
+    }
+    impl Kind {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Unspecified => "Kind_Unspecified",
+                Self::Circle => "Kind_Circle",
+                Self::Rectangle => "Kind_Rectangle",
+                Self::Freeform => "Kind_Freeform",
+                Self::Telestration => "Kind_Telestration",
+                Self::Polygon => "Kind_Polygon",
+                Self::RangingCircle => "Kind_RangingCircle",
+                Self::Bullseye => "Kind_Bullseye",
+                Self::Ellipse => "Kind_Ellipse",
+                Self::Vehicle2D => "Kind_Vehicle2D",
+                Self::Vehicle3D => "Kind_Vehicle3D",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "Kind_Unspecified" => Some(Self::Unspecified),
+                "Kind_Circle" => Some(Self::Circle),
+                "Kind_Rectangle" => Some(Self::Rectangle),
+                "Kind_Freeform" => Some(Self::Freeform),
+                "Kind_Telestration" => Some(Self::Telestration),
+                "Kind_Polygon" => Some(Self::Polygon),
+                "Kind_RangingCircle" => Some(Self::RangingCircle),
+                "Kind_Bullseye" => Some(Self::Bullseye),
+                "Kind_Ellipse" => Some(Self::Ellipse),
+                "Kind_Vehicle2D" => Some(Self::Vehicle2D),
+                "Kind_Vehicle3D" => Some(Self::Vehicle3D),
+                _ => None,
+            }
+        }
+    }
+    ///
+    /// Explicit stroke/fill/both discriminator.
+    ///
+    /// ATAK's source XML distinguishes "stroke-only polyline" from "closed shape
+    /// with both stroke and fill" by the presence of the <fillColor> element.
+    /// Both states can hash to all-zero color fields, so we carry the signal
+    /// explicitly. Parser sets this from (sawStrokeColor, sawFillColor) at the
+    /// end of parse; builder uses it to decide which of <strokeColor> /
+    /// <fillColor> to emit in the reconstructed XML.
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum StyleMode {
+        ///
+        /// Unspecified — receiver infers from which color fields are non-zero.
+        Unspecified = 0,
+        ///
+        /// Stroke only. No <fillColor> in the source XML. Used for polylines,
+        /// ranging lines, bullseye rings.
+        StrokeOnly = 1,
+        ///
+        /// Fill only. No <strokeColor> in the source XML. Rare but valid in
+        /// ATAK (solid region with no outline).
+        FillOnly = 2,
+        ///
+        /// Both stroke and fill present. Closed shapes: circle, rectangle,
+        /// polygon, ranging circle.
+        StrokeAndFill = 3,
+    }
+    impl StyleMode {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Unspecified => "StyleMode_Unspecified",
+                Self::StrokeOnly => "StyleMode_StrokeOnly",
+                Self::FillOnly => "StyleMode_FillOnly",
+                Self::StrokeAndFill => "StyleMode_StrokeAndFill",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "StyleMode_Unspecified" => Some(Self::Unspecified),
+                "StyleMode_StrokeOnly" => Some(Self::StrokeOnly),
+                "StyleMode_FillOnly" => Some(Self::FillOnly),
+                "StyleMode_StrokeAndFill" => Some(Self::StrokeAndFill),
+                _ => None,
+            }
+        }
+    }
+}
+///
+/// Fixed point of interest: spot marker, waypoint, checkpoint, 2525 symbol,
+/// or custom icon.
+///
+/// Covers CoT types b-m-p-s-m, b-m-p-w, b-m-p-c, b-m-p-s-p-i, b-m-p-s-p-loc,
+/// plus a-u-G / a-f-G / a-h-G / a-n-G with iconset paths. The marker position
+/// is carried on TAKPacketV2.latitude_i/longitude_i; fields below carry only
+/// the marker-specific metadata.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct Marker {
+    ///
+    /// Marker kind
+    #[prost(enumeration = "marker::Kind", tag = "1")]
+    pub kind: i32,
+    ///
+    /// Marker color as a named palette entry. If Unspecifed_Color, the exact
+    /// ARGB is in color_argb.
+    #[prost(enumeration = "Team", tag = "2")]
+    pub color: i32,
+    ///
+    /// Marker color exact ARGB bit pattern. Always populated on the wire.
+    #[prost(fixed32, tag = "3")]
+    pub color_argb: u32,
+    ///
+    /// Status readiness flag (ATAK <status readiness="true"/>).
+    #[prost(bool, tag = "4")]
+    pub readiness: bool,
+    ///
+    /// Parent link UID (ATAK <link uid=... relation="p-p"/>). Empty = no parent.
+    /// For spot/waypoint markers this is typically the producing TAK user's UID.
+    #[prost(string, tag = "5")]
+    pub parent_uid: ::prost::alloc::string::String,
+    ///
+    /// Parent CoT type (e.g. "a-f-G-U-C"). Usually the parent TAK user's type.
+    #[prost(string, tag = "6")]
+    pub parent_type: ::prost::alloc::string::String,
+    ///
+    /// Parent callsign (e.g. "HOPE").
+    #[prost(string, tag = "7")]
+    pub parent_callsign: ::prost::alloc::string::String,
+    ///
+    /// Iconset path stored verbatim. ATAK emits three flavors:
+    ///    Kind_Symbol2525    -> "COT_MAPPING_2525B/<cot-type-prefix>/<cot-type>"
+    ///    Kind_SpotMap       -> "COT_MAPPING_SPOTMAP/<cot-type>/<argb>"
+    ///    Kind_CustomIcon    -> "<UUID>/<GroupName>/<filename>.png"
+    /// Stored end-to-end without prefix stripping; the ~19 bytes saved by
+    /// stripping well-known prefixes are not worth the builder-side bug
+    /// surface, and the dict compresses the repetition effectively.
+    #[prost(string, tag = "8")]
+    pub iconset: ::prost::alloc::string::String,
+}
+/// Nested message and enum types in `Marker`.
+pub mod marker {
+    ///
+    /// Marker kind. Used to pick sensible receiver defaults when the CoT type
+    /// alone is ambiguous (e.g. a-u-G could be a 2525 symbol or a custom icon
+    /// depending on the iconset path).
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum Kind {
+        ///
+        /// Unspecified — fall back to TAKPacketV2.cot_type_id
+        Unspecified = 0,
+        ///
+        /// b-m-p-s-m: Spot map marker
+        Spot = 1,
+        ///
+        /// b-m-p-w: Route waypoint
+        Waypoint = 2,
+        ///
+        /// b-m-p-c: Checkpoint
+        Checkpoint = 3,
+        ///
+        /// b-m-p-s-p-i / b-m-p-s-p-loc: Self-position marker
+        SelfPosition = 4,
+        ///
+        /// 2525B/C military symbol (iconsetpath = COT_MAPPING_2525B/...)
+        Symbol2525 = 5,
+        ///
+        /// COT_MAPPING_SPOTMAP icon (e.g. colored dot)
+        SpotMap = 6,
+        ///
+        /// Custom icon set (UUID/GroupName/filename.png)
+        CustomIcon = 7,
+        ///
+        /// b-m-p-w-GOTO: Go To / bloodhound navigation waypoint.
+        GoToPoint = 8,
+        ///
+        /// b-m-p-c-ip: Initial point (mission planning control point).
+        InitialPoint = 9,
+        ///
+        /// b-m-p-c-cp: Contact point (mission planning control point).
+        ContactPoint = 10,
+        ///
+        /// b-m-p-s-p-op: Observation post.
+        ObservationPost = 11,
+        ///
+        /// b-i-x-i: Quick Pic geotagged image marker. iconset carries the
+        /// image reference (local filename or remote URL); the image itself
+        /// does not ride on the LoRa wire.
+        ImageMarker = 12,
+    }
+    impl Kind {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Unspecified => "Kind_Unspecified",
+                Self::Spot => "Kind_Spot",
+                Self::Waypoint => "Kind_Waypoint",
+                Self::Checkpoint => "Kind_Checkpoint",
+                Self::SelfPosition => "Kind_SelfPosition",
+                Self::Symbol2525 => "Kind_Symbol2525",
+                Self::SpotMap => "Kind_SpotMap",
+                Self::CustomIcon => "Kind_CustomIcon",
+                Self::GoToPoint => "Kind_GoToPoint",
+                Self::InitialPoint => "Kind_InitialPoint",
+                Self::ContactPoint => "Kind_ContactPoint",
+                Self::ObservationPost => "Kind_ObservationPost",
+                Self::ImageMarker => "Kind_ImageMarker",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "Kind_Unspecified" => Some(Self::Unspecified),
+                "Kind_Spot" => Some(Self::Spot),
+                "Kind_Waypoint" => Some(Self::Waypoint),
+                "Kind_Checkpoint" => Some(Self::Checkpoint),
+                "Kind_SelfPosition" => Some(Self::SelfPosition),
+                "Kind_Symbol2525" => Some(Self::Symbol2525),
+                "Kind_SpotMap" => Some(Self::SpotMap),
+                "Kind_CustomIcon" => Some(Self::CustomIcon),
+                "Kind_GoToPoint" => Some(Self::GoToPoint),
+                "Kind_InitialPoint" => Some(Self::InitialPoint),
+                "Kind_ContactPoint" => Some(Self::ContactPoint),
+                "Kind_ObservationPost" => Some(Self::ObservationPost),
+                "Kind_ImageMarker" => Some(Self::ImageMarker),
+                _ => None,
+            }
+        }
+    }
+}
+///
+/// Range and bearing measurement line from the event anchor to a target point.
+///
+/// Covers CoT type u-rb-a. The anchor position is on
+/// TAKPacketV2.latitude_i/longitude_i; the target endpoint is carried as a
+/// CotGeoPoint — same delta-from-anchor encoding used by DrawnShape.vertices
+/// so a self-anchored RAB (common case) encodes in zero bytes.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct RangeAndBearing {
+    ///
+    /// Target/anchor endpoint (delta-encoded from TAKPacketV2.latitude_i/longitude_i).
+    #[prost(message, optional, tag = "1")]
+    pub anchor: ::core::option::Option<CotGeoPoint>,
+    ///
+    /// Anchor UID (from <link uid="anchor-1"/>). Empty = free-standing.
+    #[prost(string, tag = "2")]
+    pub anchor_uid: ::prost::alloc::string::String,
+    ///
+    /// Range in centimeters (value * 100). Range 0..4294 km.
+    #[prost(uint32, tag = "3")]
+    pub range_cm: u32,
+    ///
+    /// Bearing in degrees * 100 (0..36000).
+    #[prost(uint32, tag = "4")]
+    pub bearing_cdeg: u32,
+    ///
+    /// Stroke color as a Team palette entry. See DrawnShape.stroke_color doc.
+    #[prost(enumeration = "Team", tag = "5")]
+    pub stroke_color: i32,
+    ///
+    /// Stroke color exact ARGB fallback.
+    #[prost(fixed32, tag = "6")]
+    pub stroke_argb: u32,
+    ///
+    /// Stroke weight * 10 (e.g. 30 = 3.0).
+    #[prost(uint32, tag = "7")]
+    pub stroke_weight_x10: u32,
+}
+///
+/// Named route consisting of ordered waypoints and control points.
+///
+/// Covers CoT type b-m-r. The first waypoint's position is on
+/// TAKPacketV2.latitude_i/longitude_i; subsequent waypoints and checkpoints
+/// are in `links`. Link count is capped at 16 by the nanopb pool; senders
+/// MUST truncate longer routes and set `truncated = true`.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Route {
+    ///
+    /// Travel method
+    #[prost(enumeration = "route::Method", tag = "1")]
+    pub method: i32,
+    ///
+    /// Direction (infil/exfil)
+    #[prost(enumeration = "route::Direction", tag = "2")]
+    pub direction: i32,
+    ///
+    /// Waypoint name prefix (e.g. "CP").
+    #[prost(string, tag = "3")]
+    pub prefix: ::prost::alloc::string::String,
+    ///
+    /// Stroke weight * 10 (e.g. 30 = 3.0). 0 = default.
+    #[prost(uint32, tag = "4")]
+    pub stroke_weight_x10: u32,
+    ///
+    /// Ordered list of route control points. Capped at 16.
+    #[prost(message, repeated, tag = "5")]
+    pub links: ::prost::alloc::vec::Vec<route::Link>,
+    ///
+    /// True if the sender truncated `links` to fit the pool.
+    #[prost(bool, tag = "6")]
+    pub truncated: bool,
+}
+/// Nested message and enum types in `Route`.
+pub mod route {
+    ///
+    /// Route waypoint or control point. Each link corresponds to one ATAK
+    /// <link type=... point=...> entry inside the b-m-r event.
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct Link {
+        ///
+        /// Waypoint position (delta-encoded from TAKPacketV2.latitude_i/longitude_i).
+        #[prost(message, optional, tag = "1")]
+        pub point: ::core::option::Option<super::CotGeoPoint>,
+        ///
+        /// Optional UID (empty = receiver derives).
+        #[prost(string, tag = "2")]
+        pub uid: ::prost::alloc::string::String,
+        ///
+        /// Optional display callsign (e.g. "CP1"). Empty for unnamed control points.
+        #[prost(string, tag = "3")]
+        pub callsign: ::prost::alloc::string::String,
+        ///
+        /// Link role: 0 = waypoint (b-m-p-w), 1 = checkpoint (b-m-p-c).
+        #[prost(uint32, tag = "4")]
+        pub link_type: u32,
+    }
+    ///
+    /// Travel method for the route.
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum Method {
+        ///
+        /// Unspecified / unknown
+        Unspecified = 0,
+        ///
+        /// Driving / vehicle
+        Driving = 1,
+        ///
+        /// Walking / foot
+        Walking = 2,
+        ///
+        /// Flying
+        Flying = 3,
+        ///
+        /// Swimming (individual)
+        Swimming = 4,
+        ///
+        /// Watercraft (boat)
+        Watercraft = 5,
+    }
+    impl Method {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Unspecified => "Method_Unspecified",
+                Self::Driving => "Method_Driving",
+                Self::Walking => "Method_Walking",
+                Self::Flying => "Method_Flying",
+                Self::Swimming => "Method_Swimming",
+                Self::Watercraft => "Method_Watercraft",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "Method_Unspecified" => Some(Self::Unspecified),
+                "Method_Driving" => Some(Self::Driving),
+                "Method_Walking" => Some(Self::Walking),
+                "Method_Flying" => Some(Self::Flying),
+                "Method_Swimming" => Some(Self::Swimming),
+                "Method_Watercraft" => Some(Self::Watercraft),
+                _ => None,
+            }
+        }
+    }
+    ///
+    /// Route direction (infil = ingress, exfil = egress).
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum Direction {
+        ///
+        /// Unspecified
+        Unspecified = 0,
+        ///
+        /// Infiltration (ingress)
+        Infil = 1,
+        ///
+        /// Exfiltration (egress)
+        Exfil = 2,
+    }
+    impl Direction {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Unspecified => "Direction_Unspecified",
+                Self::Infil => "Direction_Infil",
+                Self::Exfil => "Direction_Exfil",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "Direction_Unspecified" => Some(Self::Unspecified),
+                "Direction_Infil" => Some(Self::Infil),
+                "Direction_Exfil" => Some(Self::Exfil),
+                _ => None,
+            }
+        }
+    }
+}
+///
+/// 9-line MEDEVAC request (CoT type b-r-f-h-c).
+///
+/// Mirrors the ATAK MedLine tool's <_medevac_> detail element. Every field
+/// is optional (proto3 default); senders omit lines they don't have. The
+/// envelope (TAKPacketV2.uid, cot_type_id=b-r-f-h-c, latitude_i/longitude_i,
+/// altitude, callsign) carries Line 1 (location) and Line 2 (callsign).
+///
+/// All numeric fields are tight varints so a complete 9-line request fits
+/// in well under 100 bytes of proto on the wire.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CasevacReport {
+    ///
+    /// Line 3: precedence / urgency.
+    #[prost(enumeration = "casevac_report::Precedence", tag = "1")]
+    pub precedence: i32,
+    ///
+    /// Line 4: special equipment required, as a bitfield.
+    ///    bit 0: none
+    ///    bit 1: hoist
+    ///    bit 2: extraction equipment
+    ///    bit 3: ventilator
+    ///    bit 4: blood
+    #[prost(uint32, tag = "2")]
+    pub equipment_flags: u32,
+    ///
+    /// Line 5: number of litter (stretcher-bound) patients.
+    #[prost(uint32, tag = "3")]
+    pub litter_patients: u32,
+    ///
+    /// Line 5: number of ambulatory (walking-wounded) patients.
+    #[prost(uint32, tag = "4")]
+    pub ambulatory_patients: u32,
+    ///
+    /// Line 6: security situation at the PZ.
+    #[prost(enumeration = "casevac_report::Security", tag = "5")]
+    pub security: i32,
+    ///
+    /// Line 7: HLZ marking method.
+    #[prost(enumeration = "casevac_report::HlzMarking", tag = "6")]
+    pub hlz_marking: i32,
+    ///
+    /// Line 7 supplementary: short free-text describing the zone marker
+    /// (e.g. "Green smoke", "VS-17 panel west"). Capped tight in options.
+    #[prost(string, tag = "7")]
+    pub zone_marker: ::prost::alloc::string::String,
+    /// --- Line 8: patient nationality counts ---
+    #[prost(uint32, tag = "8")]
+    pub us_military: u32,
+    #[prost(uint32, tag = "9")]
+    pub us_civilian: u32,
+    #[prost(uint32, tag = "10")]
+    pub non_us_military: u32,
+    #[prost(uint32, tag = "11")]
+    pub non_us_civilian: u32,
+    /// enemy prisoner of war
+    #[prost(uint32, tag = "12")]
+    pub epw: u32,
+    #[prost(uint32, tag = "13")]
+    pub child: u32,
+    ///
+    /// Line 9: terrain and obstacles at the PZ, as a bitfield.
+    ///    bit 0: slope
+    ///    bit 1: rough
+    ///    bit 2: loose
+    ///    bit 3: trees
+    ///    bit 4: wires
+    ///    bit 5: other
+    #[prost(uint32, tag = "14")]
+    pub terrain_flags: u32,
+    ///
+    /// Line 2: radio frequency / callsign metadata (e.g. "38.90 Mhz" or
+    /// "Victor 6"). Capped tight in options.
+    #[prost(string, tag = "15")]
+    pub frequency: ::prost::alloc::string::String,
+    ///
+    /// Short title / MEDEVAC identifier (e.g. "EAGLE.15.181230"). Usually the
+    /// same as the envelope callsign but ATAK sometimes carries a distinct
+    /// ops-number here.
+    #[prost(string, tag = "16")]
+    pub title: ::prost::alloc::string::String,
+    ///
+    /// Primary medline free-text — the single most clinically important line
+    /// on a MEDLINE form (e.g. "2 urgent litter patients, smoke on approach").
+    /// MUST be preserved under MTU pressure as long as any casevac is sent.
+    #[prost(string, tag = "17")]
+    pub medline_remarks: ::prost::alloc::string::String,
+    ///
+    /// Line 3 (newer ATAK format): patient counts by precedence level.
+    /// Coexists with the enum-style `precedence` field (tag 1) — older ATAK
+    /// emits a single enum, newer ATAK emits these counts, and both can be
+    /// set simultaneously. Senders populate whichever style(s) the source
+    /// XML had; receivers prefer counts when non-zero.
+    #[prost(uint32, tag = "18")]
+    pub urgent_count: u32,
+    #[prost(uint32, tag = "19")]
+    pub urgent_surgical_count: u32,
+    #[prost(uint32, tag = "20")]
+    pub priority_count: u32,
+    #[prost(uint32, tag = "21")]
+    pub routine_count: u32,
+    #[prost(uint32, tag = "22")]
+    pub convenience_count: u32,
+    ///
+    /// Line 4 supplementary: free-text description of non-standard equipment
+    /// (e.g. "Blood warmer"). Pairs with the `equipment_flags` bitfield.
+    #[prost(string, tag = "23")]
+    pub equipment_detail: ::prost::alloc::string::String,
+    ///
+    /// Line 1 override: MGRS grid when distinct from the event anchor point
+    /// (e.g. "34T CQ 12345 67890"). Event lat/lon/hae still carries the
+    /// numeric location; this field preserves the exact MGRS string the
+    /// medic entered.
+    #[prost(string, tag = "24")]
+    pub zone_protected_coord: ::prost::alloc::string::String,
+    ///
+    /// Line 9 supplementary: slope direction (e.g. "N", "NE", "SSW") when
+    /// `terrain_flags` bit 0 (slope) is set.
+    #[prost(string, tag = "25")]
+    pub terrain_slope_dir: ::prost::alloc::string::String,
+    ///
+    /// Line 9 supplementary: free-text description of "other" terrain hazards
+    /// (e.g. "Loose debris on west edge") when `terrain_flags` bit 5 (other)
+    /// is set. Tier-2 strippable under MTU pressure.
+    #[prost(string, tag = "26")]
+    pub terrain_other_detail: ::prost::alloc::string::String,
+    ///
+    /// Line 7 supplementary: how the zone is being marked right now
+    /// (e.g. "Orange smoke", "VS-17 panel"). Complements the structured
+    /// `hlz_marking` enum with a specific human-readable description.
+    #[prost(string, tag = "27")]
+    pub marked_by: ::prost::alloc::string::String,
+    ///
+    /// Nearby obstacles on the approach (e.g. "Power lines north of HLZ").
+    #[prost(string, tag = "28")]
+    pub obstacles: ::prost::alloc::string::String,
+    ///
+    /// Wind direction and speed (e.g. "270 at 12 kts").
+    #[prost(string, tag = "29")]
+    pub winds_are_from: ::prost::alloc::string::String,
+    ///
+    /// Friendly forces posture near the pickup zone
+    /// (e.g. "Squad east of HLZ").
+    #[prost(string, tag = "30")]
+    pub friendlies: ::prost::alloc::string::String,
+    ///
+    /// Known or suspected enemy positions near the pickup zone
+    /// (e.g. "Possible enemy on south ridge").
+    #[prost(string, tag = "31")]
+    pub enemy: ::prost::alloc::string::String,
+    ///
+    /// Free-text description of the HLZ itself
+    /// (e.g. "Primary HLZ is soccer field").
+    #[prost(string, tag = "32")]
+    pub hlz_remarks: ::prost::alloc::string::String,
+    ///
+    /// Per-patient clinical records. Each entry is one patient's ZMIST card
+    /// (Zap number / Mechanism / Injuries / Signs / Treatment). Repeatable —
+    /// a mass-casualty event can carry 1-6 entries in practice, limited by
+    /// the 237 B LoRa MTU.
+    #[prost(message, repeated, tag = "33")]
+    pub zmist: ::prost::alloc::vec::Vec<ZMistEntry>,
+}
+/// Nested message and enum types in `CasevacReport`.
+pub mod casevac_report {
+    ///
+    /// Line 3: precedence / urgency.
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum Precedence {
+        Unspecified = 0,
+        /// A - immediate, life-threatening
+        Urgent = 1,
+        /// B - needs surgery
+        UrgentSurgical = 2,
+        /// C - within 4 hours
+        Priority = 3,
+        /// D - within 24 hours
+        Routine = 4,
+        /// E - convenience
+        Convenience = 5,
+    }
+    impl Precedence {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Unspecified => "Precedence_Unspecified",
+                Self::Urgent => "Precedence_Urgent",
+                Self::UrgentSurgical => "Precedence_UrgentSurgical",
+                Self::Priority => "Precedence_Priority",
+                Self::Routine => "Precedence_Routine",
+                Self::Convenience => "Precedence_Convenience",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "Precedence_Unspecified" => Some(Self::Unspecified),
+                "Precedence_Urgent" => Some(Self::Urgent),
+                "Precedence_UrgentSurgical" => Some(Self::UrgentSurgical),
+                "Precedence_Priority" => Some(Self::Priority),
+                "Precedence_Routine" => Some(Self::Routine),
+                "Precedence_Convenience" => Some(Self::Convenience),
+                _ => None,
+            }
+        }
+    }
+    ///
+    /// Line 7: HLZ marking method.
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum HlzMarking {
+        Unspecified = 0,
+        Panels = 1,
+        PyroSignal = 2,
+        Smoke = 3,
+        None = 4,
+        Other = 5,
+    }
+    impl HlzMarking {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Unspecified => "HlzMarking_Unspecified",
+                Self::Panels => "HlzMarking_Panels",
+                Self::PyroSignal => "HlzMarking_PyroSignal",
+                Self::Smoke => "HlzMarking_Smoke",
+                Self::None => "HlzMarking_None",
+                Self::Other => "HlzMarking_Other",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "HlzMarking_Unspecified" => Some(Self::Unspecified),
+                "HlzMarking_Panels" => Some(Self::Panels),
+                "HlzMarking_PyroSignal" => Some(Self::PyroSignal),
+                "HlzMarking_Smoke" => Some(Self::Smoke),
+                "HlzMarking_None" => Some(Self::None),
+                "HlzMarking_Other" => Some(Self::Other),
+                _ => None,
+            }
+        }
+    }
+    ///
+    /// Line 6: security situation at the pickup zone.
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum Security {
+        Unspecified = 0,
+        /// N - no enemy activity
+        NoEnemy = 1,
+        /// P - possible enemy
+        PossibleEnemy = 2,
+        /// E - enemy, approach with caution
+        EnemyInArea = 3,
+        /// X - armed escort required
+        EnemyInArmedContact = 4,
+    }
+    impl Security {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Unspecified => "Security_Unspecified",
+                Self::NoEnemy => "Security_NoEnemy",
+                Self::PossibleEnemy => "Security_PossibleEnemy",
+                Self::EnemyInArea => "Security_EnemyInArea",
+                Self::EnemyInArmedContact => "Security_EnemyInArmedContact",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "Security_Unspecified" => Some(Self::Unspecified),
+                "Security_NoEnemy" => Some(Self::NoEnemy),
+                "Security_PossibleEnemy" => Some(Self::PossibleEnemy),
+                "Security_EnemyInArea" => Some(Self::EnemyInArea),
+                "Security_EnemyInArmedContact" => Some(Self::EnemyInArmedContact),
+                _ => None,
+            }
+        }
+    }
+}
+///
+/// Per-patient clinical summary record — one entry per patient in a CASEVAC.
+/// Maps directly to ATAK's <zMist> child element inside <zMistsMap>.
+/// All fields are optional free-text; senders populate what they have.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ZMistEntry {
+    ///
+    /// Patient identifier / sequence label (e.g. "ZMIST-1", "ZMIST-2").
+    #[prost(string, tag = "1")]
+    pub title: ::prost::alloc::string::String,
+    ///
+    /// Zap number — unique patient tracking ID (often a terse code like
+    /// "Gunshot" or a serial).
+    #[prost(string, tag = "2")]
+    pub z: ::prost::alloc::string::String,
+    ///
+    /// Mechanism of injury (e.g. "Penetrating trauma", "Blast injury").
+    #[prost(string, tag = "3")]
+    pub m: ::prost::alloc::string::String,
+    ///
+    /// Injuries observed (e.g. "Left thigh", "Concussion").
+    #[prost(string, tag = "4")]
+    pub i: ::prost::alloc::string::String,
+    ///
+    /// Signs / vital stats (e.g. "Stable", "Priority", "BP 110/70").
+    #[prost(string, tag = "5")]
+    pub s: ::prost::alloc::string::String,
+    ///
+    /// Treatment given (e.g. "Tourniquet 1810Z", "O2 administered").
+    #[prost(string, tag = "6")]
+    pub t: ::prost::alloc::string::String,
+}
+///
+/// Emergency alert / 911 beacon (CoT types b-a-o-tbl, b-a-o-pan, b-a-o-opn,
+/// b-a-o-can, b-a-o-c, b-a-g).
+///
+/// Small, high-priority structured record. The CoT type string is still set
+/// on cot_type_id so receivers that ignore payload_variant can still display
+/// the alert from the enum alone; the typed fields let modern receivers show
+/// the authoring unit and handle cancel-referencing without XML parsing.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct EmergencyAlert {
+    ///
+    /// Alert discriminator.
+    #[prost(enumeration = "emergency_alert::Type", tag = "1")]
+    pub r#type: i32,
+    ///
+    /// UID of the unit that raised the alert. Often the same as
+    /// TAKPacketV2.uid but can be a parent device uid when a tracker raises
+    /// an alert on behalf of a dismount.
+    #[prost(string, tag = "2")]
+    pub authoring_uid: ::prost::alloc::string::String,
+    ///
+    /// For Type_Cancel: the uid of the alert being cancelled. Empty for
+    /// non-cancel alert types.
+    #[prost(string, tag = "3")]
+    pub cancel_reference_uid: ::prost::alloc::string::String,
+}
+/// Nested message and enum types in `EmergencyAlert`.
+pub mod emergency_alert {
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum Type {
+        Unspecified = 0,
+        /// b-a-o-tbl
+        Alert911 = 1,
+        /// b-a-o-pan
+        RingTheBell = 2,
+        /// b-a-o-opn
+        InContact = 3,
+        /// b-a-g
+        GeoFenceBreached = 4,
+        /// b-a-o-c
+        Custom = 5,
+        /// b-a-o-can
+        Cancel = 6,
+    }
+    impl Type {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Unspecified => "Type_Unspecified",
+                Self::Alert911 => "Type_Alert911",
+                Self::RingTheBell => "Type_RingTheBell",
+                Self::InContact => "Type_InContact",
+                Self::GeoFenceBreached => "Type_GeoFenceBreached",
+                Self::Custom => "Type_Custom",
+                Self::Cancel => "Type_Cancel",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "Type_Unspecified" => Some(Self::Unspecified),
+                "Type_Alert911" => Some(Self::Alert911),
+                "Type_RingTheBell" => Some(Self::RingTheBell),
+                "Type_InContact" => Some(Self::InContact),
+                "Type_GeoFenceBreached" => Some(Self::GeoFenceBreached),
+                "Type_Custom" => Some(Self::Custom),
+                "Type_Cancel" => Some(Self::Cancel),
+                _ => None,
+            }
+        }
+    }
+}
+///
+/// Task / engage request (CoT type t-s).
+///
+/// Mirrors ATAK's TaskCotReceiver / CotTaskBuilder workflow. The envelope
+/// carries the task's originating uid (implicit requester), position, and
+/// creation time; the fields below carry structured metadata the raw-detail
+/// fallback currently loses.
+///
+/// Fields are deliberately lean — this variant is closer to the MTU ceiling
+/// than the others, so every string is capped in options.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct TaskRequest {
+    ///
+    /// Short tag for the task category (e.g. "engage", "observe", "recon",
+    /// "rescue"). Free text on the wire so ATAK-specific task taxonomies
+    /// don't need proto coordination; capped tight in options.
+    #[prost(string, tag = "1")]
+    pub task_type: ::prost::alloc::string::String,
+    ///
+    /// UID of the target / map item being tasked.
+    #[prost(string, tag = "2")]
+    pub target_uid: ::prost::alloc::string::String,
+    ///
+    /// UID of the assigned unit. Empty = unassigned / broadcast task.
+    #[prost(string, tag = "3")]
+    pub assignee_uid: ::prost::alloc::string::String,
+    #[prost(enumeration = "task_request::Priority", tag = "4")]
+    pub priority: i32,
+    #[prost(enumeration = "task_request::Status", tag = "5")]
+    pub status: i32,
+    ///
+    /// Optional short note (reason, constraints, grid reference). Capped
+    /// tight in options to keep the worst-case under the LoRa MTU.
+    #[prost(string, tag = "6")]
+    pub note: ::prost::alloc::string::String,
+}
+/// Nested message and enum types in `TaskRequest`.
+pub mod task_request {
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum Priority {
+        Unspecified = 0,
+        Low = 1,
+        Normal = 2,
+        High = 3,
+        Critical = 4,
+    }
+    impl Priority {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Unspecified => "Priority_Unspecified",
+                Self::Low => "Priority_Low",
+                Self::Normal => "Priority_Normal",
+                Self::High => "Priority_High",
+                Self::Critical => "Priority_Critical",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "Priority_Unspecified" => Some(Self::Unspecified),
+                "Priority_Low" => Some(Self::Low),
+                "Priority_Normal" => Some(Self::Normal),
+                "Priority_High" => Some(Self::High),
+                "Priority_Critical" => Some(Self::Critical),
+                _ => None,
+            }
+        }
+    }
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum Status {
+        Unspecified = 0,
+        /// assigned, not yet acknowledged
+        Pending = 1,
+        /// assignee has seen it
+        Acknowledged = 2,
+        /// assignee is working it
+        InProgress = 3,
+        /// task done
+        Completed = 4,
+        /// cancelled before completion
+        Cancelled = 5,
+    }
+    impl Status {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Unspecified => "Status_Unspecified",
+                Self::Pending => "Status_Pending",
+                Self::Acknowledged => "Status_Acknowledged",
+                Self::InProgress => "Status_InProgress",
+                Self::Completed => "Status_Completed",
+                Self::Cancelled => "Status_Cancelled",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "Status_Unspecified" => Some(Self::Unspecified),
+                "Status_Pending" => Some(Self::Pending),
+                "Status_Acknowledged" => Some(Self::Acknowledged),
+                "Status_InProgress" => Some(Self::InProgress),
+                "Status_Completed" => Some(Self::Completed),
+                "Status_Cancelled" => Some(Self::Cancelled),
+                _ => None,
+            }
+        }
+    }
+}
+///
+/// Weather annotation from <environment> CoT detail element.
+///
+/// Attaches to any TAKPacketV2 regardless of payload_variant — an Aircraft,
+/// PLI, or Marker can all carry observed conditions at the emitting station.
+/// ATAK-CIV ships an XSD for <environment> but no dedicated handler, so the
+/// element round-trips through the generic detail pipeline; this message
+/// promotes it to a first-class structured field.
+///
+/// Target wire cost: ~6-8 bytes compressed with a fully populated instance.
+///
+/// Named `TAKEnvironment` (not just `Environment`) because the bare name
+/// collides with `SwiftUI.Environment` — every SwiftUI view in a consuming
+/// iOS app uses the `@Environment` property wrapper, and importing the
+/// generated proto module would make `Environment` ambiguous in every one
+/// of those files. The `TAK` prefix matches the convention used by the
+/// outer `TAKPacketV2` wrapper and is unambiguous across all target
+/// languages (Swift, Kotlin, Python, TypeScript, C#).
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct TakEnvironment {
+    ///
+    /// Temperature in deci-degrees Celsius. 225 = 22.5°C.
+    /// Range covers -50°C to +50°C (-500 to +500) which spans every realistic
+    /// outdoor TAK deployment. sint32 because negative temps are common in
+    /// cold-weather ops.
+    #[prost(sint32, tag = "1")]
+    pub temperature_c_x10: i32,
+    ///
+    /// Wind direction in whole degrees, 0-359. "Direction FROM" per
+    /// meteorological convention (matches CoT / ATAK).
+    #[prost(uint32, tag = "2")]
+    pub wind_direction_deg: u32,
+    ///
+    /// Wind speed in cm/s. Matches the unit of TAKPacketV2.speed for
+    /// consistency. 1200 = 12.00 m/s = ~27 mph.
+    #[prost(uint32, tag = "3")]
+    pub wind_speed_cm_s: u32,
+}
+///
+/// Sensor field-of-view cone from <sensor> CoT detail element.
+///
+/// Encodes the 8 geometry attributes that ATAK-CIV's SensorDetailHandler
+/// reads from the wire; drops the 9 visual-styling attributes that are
+/// receiver-side render hints (fovAlpha, fovRed/Green/Blue, strokeColor,
+/// strokeWeight, displayMagneticReference, hideFov, fovLabels, rangeLines).
+/// The receiving ATAK client restores those from its own defaults, same as
+/// every other CoT carried over Meshtastic today.
+///
+/// Attaches to any TAKPacketV2 — a PLI with a sensor on the operator's head,
+/// an Aircraft with a FLIR turret, a Marker dropped on a UAV.
+/// Target wire cost: ~7-14 bytes compressed (dominated by model string).
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SensorFov {
+    #[prost(enumeration = "sensor_fov::SensorType", tag = "1")]
+    pub r#type: i32,
+    ///
+    /// Azimuth in whole degrees, 0-359. "Pointing direction" of the cone axis,
+    /// measured clockwise from true north. Whole degrees match ATAK-CIV's
+    /// SensorDetailHandler default (270°) and save varint bytes over centi-deg.
+    #[prost(uint32, tag = "2")]
+    pub azimuth_deg: u32,
+    ///
+    /// Maximum range of the cone in meters.
+    /// Optional — if unset, receivers should use the ATAK-CIV default of 100m.
+    #[prost(uint32, optional, tag = "3")]
+    pub range_m: ::core::option::Option<u32>,
+    ///
+    /// Horizontal field of view in whole degrees (cone's angular width).
+    /// ATAK-CIV default is 45°.
+    #[prost(uint32, tag = "4")]
+    pub fov_horizontal_deg: u32,
+    ///
+    /// Vertical field of view in whole degrees. ATAK-CIV default is 45°.
+    /// Optional — a value of 0 means "not set / use horizontal FOV".
+    #[prost(uint32, tag = "5")]
+    pub fov_vertical_deg: u32,
+    ///
+    /// Elevation angle in whole degrees. Positive = up, negative = down.
+    /// Range -90 to +90. sint32 for varint efficiency on small negatives.
+    #[prost(sint32, tag = "6")]
+    pub elevation_deg: i32,
+    ///
+    /// Roll (camera tilt) in whole degrees, -180 to +180.
+    /// Optional — use 0 if the sensor doesn't track roll.
+    #[prost(sint32, tag = "7")]
+    pub roll_deg: i32,
+    ///
+    /// Free-form device model identifier, e.g. "FLIR-Boson-640", "SEEK".
+    /// Optional — empty string means "unknown model" (ATAK-CIV default).
+    #[prost(string, tag = "8")]
+    pub model: ::prost::alloc::string::String,
+}
+/// Nested message and enum types in `SensorFov`.
+pub mod sensor_fov {
+    ///
+    /// Coarse sensor category, inferred from `model` on parse when the source
+    /// XML doesn't label it. Receivers that render differently per sensor
+    /// class (thermal overlay vs daylight cone) use this.
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum SensorType {
+        Unspecified = 0,
+        /// daylight / general optical
+        Camera = 1,
+        /// FLIR, thermal imager
+        Thermal = 2,
+        /// rangefinder, LRF, designator
+        Laser = 3,
+        /// night vision goggles
+        Nvg = 4,
+        /// radio/radar direction-finding
+        Rf = 5,
+        Other = 6,
+    }
+    impl SensorType {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Unspecified => "SensorType_Unspecified",
+                Self::Camera => "SensorType_Camera",
+                Self::Thermal => "SensorType_Thermal",
+                Self::Laser => "SensorType_Laser",
+                Self::Nvg => "SensorType_Nvg",
+                Self::Rf => "SensorType_Rf",
+                Self::Other => "SensorType_Other",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "SensorType_Unspecified" => Some(Self::Unspecified),
+                "SensorType_Camera" => Some(Self::Camera),
+                "SensorType_Thermal" => Some(Self::Thermal),
+                "SensorType_Laser" => Some(Self::Laser),
+                "SensorType_Nvg" => Some(Self::Nvg),
+                "SensorType_Rf" => Some(Self::Rf),
+                "SensorType_Other" => Some(Self::Other),
+                _ => None,
+            }
+        }
+    }
+}
+///
+/// TAKTALK chat message payload (CoT type m-t-t).
+///
+/// TAKTALK is an ATAK plugin for voice + text team messaging. The voice
+/// audio stream goes over UDP/RTP and is NOT carried by the mesh — only
+/// the text envelope (this message) is. `from_voice` marks messages sent
+/// via push-to-talk speech-to-text so receivers can render a mic icon
+/// next to the text.
+///
+/// Wire shape inside <event type="m-t-t">/<detail>:
+///    <callsign>...</callsign>        - mapped to TAKPacketV2.callsign
+///    <lang>English</lang>            - lang
+///    <text>...</text>                - text
+///    <chatroom-id>1</chatroom-id>    - chatroom_id
+///    <voice/>                        - presence sets from_voice = true
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct TakTalkMessage {
+    ///
+    /// The text body of the TAKTALK message (speech-to-text transcript when
+    /// from_voice = true, typed message otherwise).
+    #[prost(string, tag = "1")]
+    pub text: ::prost::alloc::string::String,
+    ///
+    /// TAKTALK chatroom identifier. May be a short id like "1" for the
+    /// default room or a UUID like "30b2755c-c547-44ef-a0cc-cdbd8a15616f"
+    /// for custom rooms (resolved by TakTalkRoomData broadcasts).
+    /// Empty = broadcast room.
+    #[prost(string, tag = "2")]
+    pub chatroom_id: ::prost::alloc::string::String,
+    ///
+    /// BCP-47-ish language tag or human-readable name (e.g. "en", "English").
+    /// Empty = unspecified.
+    #[prost(string, tag = "3")]
+    pub lang: ::prost::alloc::string::String,
+    ///
+    /// True when the source CoT carried a <voice/> marker, i.e. the message
+    /// originated as push-to-talk speech-to-text. Lets receivers show a mic
+    /// icon. Proto3 only encodes when true so empty payload cost is 0 bytes.
+    #[prost(bool, tag = "4")]
+    pub from_voice: bool,
+}
+///
+/// TAKTALK room/membership broadcast (CoT type y-).
+///
+/// Announces a TAKTALK chatroom's friendly name and roster so peers can
+/// resolve room UUIDs (used in TakTalkMessage.chatroom_id and
+/// GeoChat.room_id) to a display name and participant list. Not a chat
+/// message itself — these events are emitted by TAKTALK when rooms are
+/// created or memberships change.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct TakTalkRoomData {
+    ///
+    /// Callsign of the device broadcasting the room state (typically the
+    /// room owner / latest writer).
+    ///
+    /// DEPRECATED in v0.3.2: always equals TAKPacketV2.callsign, so the wire
+    /// byte was redundant. Builders stop emitting this field in v0.3.2;
+    /// parsers still read it for one release so v0.3.1-encoded packets decode
+    /// cleanly. To be removed entirely in v0.4.x.
+    #[deprecated]
+    #[prost(string, tag = "1")]
+    pub sender_callsign: ::prost::alloc::string::String,
+    ///
+    /// Room UUID, matches TakTalkMessage.chatroom_id / GeoChat.room_id on
+    /// messages routed into this room.
+    #[prost(string, tag = "2")]
+    pub room_id: ::prost::alloc::string::String,
+    ///
+    /// Friendly display name for the room (e.g. "test", "Alpha Team").
+    #[prost(string, tag = "3")]
+    pub room_name: ::prost::alloc::string::String,
+    ///
+    /// Member callsigns. Wire-encoded as repeated strings; the underlying
+    /// CoT carries them as a single <chatroom-participants>A,B,C</> element
+    /// which parsers split / builders join on ','.
+    #[prost(string, repeated, tag = "4")]
+    pub participants: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+}
+///
+/// ATAK directed-routing recipient list (CoT <marti><dest callsign='X'/>…</marti>).
+///
+/// Present when an event is addressed to specific TAK users rather than the
+/// broadcast group. TAKTALK gates voice TTS on this element matching the
+/// receiver's callsign; directed b-t-f chats use it for the same purpose. A
+/// missing <marti> means "broadcast to all peers", which is the default for
+/// PLI, alerts, drawings, and most situational-awareness events.
+///
+/// Carried as repeated strings (not indexes into a per-packet table) because
+/// the typical event has 1-2 destinations and table overhead would erase the
+/// savings. Receivers that need the original XML element rebuild it from
+/// dest_callsign on emit.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct Marti {
+    ///
+    /// Recipient callsigns. Order is preserved end-to-end so receivers can show
+    /// primary-vs-cc distinction the same way ATAK does.
+    ///
+    /// If dest_callsign is \[TAKPacketV2.callsign\] (self-addressed, unusual but
+    /// legal — e.g. ATAK echoing back to its own room), the builder still emits
+    /// the element so loopback shapes round-trip cleanly.
+    #[prost(string, repeated, tag = "1")]
+    pub dest_callsign: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+}
+///
+/// ATAK v2 packet with expanded CoT field support and zstd dictionary compression.
+/// Sent on ATAK_PLUGIN_V2 port. The wire payload is:
+///    [1 byte flags][zstd-compressed TAKPacketV2 protobuf]
+/// Flags byte: bits 0-5 = dictionary ID, bits 6-7 = reserved.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TakPacketV2 {
+    ///
+    /// Well-known CoT event type enum.
+    /// Use CotType_Other with cot_type_str for unknown types.
+    #[prost(enumeration = "CotType", tag = "1")]
+    pub cot_type_id: i32,
+    ///
+    /// How the coordinates were generated
+    #[prost(enumeration = "CotHow", tag = "2")]
+    pub how: i32,
+    ///
+    /// Callsign
+    #[prost(string, tag = "3")]
+    pub callsign: ::prost::alloc::string::String,
+    ///
+    /// Team color assignment
+    #[prost(enumeration = "Team", tag = "4")]
+    pub team: i32,
+    ///
+    /// Role of the group member
+    #[prost(enumeration = "MemberRole", tag = "5")]
+    pub role: i32,
+    ///
+    /// Latitude, multiply by 1e-7 to get degrees in floating point
+    #[prost(sfixed32, tag = "6")]
+    pub latitude_i: i32,
+    ///
+    /// Longitude, multiply by 1e-7 to get degrees in floating point
+    #[prost(sfixed32, tag = "7")]
+    pub longitude_i: i32,
+    ///
+    /// Altitude in meters (HAE). ATAK's "no altitude" sentinel is hae=9999999.0.
+    ///
+    /// NOTE: an earlier v0.4.0 attempt made this `optional` to omit the 9999999
+    /// sentinel from the wire, but measurement showed it was net-negative: the
+    /// zstd dictionary already compresses the literal 9999999 to ~nothing, while
+    /// proto3 `optional` forces a genuine 0 m HAE (common on routes/drawings that
+    /// carry hae="0.0" or omit hae → parsed as 0) to encode explicitly (+2 bytes),
+    /// which REGRESSED the worst-case route fixture. Kept as a plain field.
+    #[prost(sint32, tag = "8")]
+    pub altitude: i32,
+    ///
+    /// Speed in cm/s
+    #[prost(uint32, tag = "9")]
+    pub speed: u32,
+    ///
+    /// Course in degrees * 100 (0-36000)
+    #[prost(uint32, tag = "10")]
+    pub course: u32,
+    ///
+    /// Battery level 0-100
+    #[prost(uint32, tag = "11")]
+    pub battery: u32,
+    ///
+    /// Geopoint source
+    #[prost(enumeration = "GeoPointSource", tag = "12")]
+    pub geo_src: i32,
+    ///
+    /// Altitude source
+    #[prost(enumeration = "GeoPointSource", tag = "13")]
+    pub alt_src: i32,
+    ///
+    /// Device UID (UUID string or device ID like "ANDROID-xxxx")
+    #[prost(string, tag = "14")]
+    pub uid: ::prost::alloc::string::String,
+    ///
+    /// Device callsign
+    #[prost(string, tag = "15")]
+    pub device_callsign: ::prost::alloc::string::String,
+    ///
+    /// Stale time as seconds offset from event time
+    #[prost(uint32, tag = "16")]
+    pub stale_seconds: u32,
+    ///
+    /// TAK client version string
+    #[prost(string, tag = "17")]
+    pub tak_version: ::prost::alloc::string::String,
+    ///
+    /// TAK device model
+    #[prost(string, tag = "18")]
+    pub tak_device: ::prost::alloc::string::String,
+    ///
+    /// TAK platform (ATAK-CIV, WebTAK, etc.)
+    #[prost(string, tag = "19")]
+    pub tak_platform: ::prost::alloc::string::String,
+    ///
+    /// TAK OS version
+    #[prost(string, tag = "20")]
+    pub tak_os: ::prost::alloc::string::String,
+    ///
+    /// Connection endpoint
+    #[prost(string, tag = "21")]
+    pub endpoint: ::prost::alloc::string::String,
+    ///
+    /// Phone number
+    #[prost(string, tag = "22")]
+    pub phone: ::prost::alloc::string::String,
+    ///
+    /// CoT event type string, only populated when cot_type_id is CotType_Other
+    #[prost(string, tag = "23")]
+    pub cot_type_str: ::prost::alloc::string::String,
+    ///
+    /// Optional remarks / free-text annotation from the <remarks> element.
+    /// Populated for non-GeoChat payload types (shapes, markers, routes, etc.)
+    /// when the original CoT event carried non-empty remarks text.
+    /// GeoChat messages carry their text in GeoChat.message instead.
+    /// Empty string (proto3 default) means no remarks were present.
+    #[prost(string, tag = "24")]
+    pub remarks: ::prost::alloc::string::String,
+    ///
+    /// Observed weather conditions (temperature, wind). From <environment>.
+    /// Type is `TAKEnvironment`, not `Environment`, to avoid colliding with
+    /// SwiftUI's `@Environment` property wrapper in iOS consumers.
+    #[prost(message, optional, tag = "25")]
+    pub environment: ::core::option::Option<TakEnvironment>,
+    ///
+    /// Sensor field-of-view cone (camera, FLIR, laser, etc.). From <sensor>.
+    #[prost(message, optional, tag = "26")]
+    pub sensor_fov: ::core::option::Option<SensorFov>,
+    ///
+    /// Directed-routing recipient list (CoT <marti><dest callsign='X'/>…</marti>).
+    /// Empty / unset = broadcast to all peers (the default for situational-awareness
+    /// events). Populated for TAKTALK m-t-t, directed b-t-f DMs, and any other CoT
+    /// shape that ATAK addresses to specific recipients. TAKTALK gates voice TTS
+    /// playback on this element matching the receiver's callsign, so dropping it
+    /// silently breaks voice messaging end-to-end.
+    ///
+    /// See Marti.
+    #[prost(message, optional, tag = "29")]
+    pub marti: ::core::option::Option<Marti>,
+    ///
+    /// The payload of the packet
+    ///
+    /// Tag 30 was `bool pli` — a PLI carries no fields beyond the common
+    /// envelope (position is in latitude_i/longitude_i), so the boolean was
+    /// pure overhead (~3 wire bytes on every position beacon, the highest-
+    /// frequency packet). PLI is now the IMPLICIT payload: a packet with NO
+    /// payload_variant set decodes as a position report. Tag 30 is reserved at
+    /// the message level (proto3 forbids `reserved` inside a oneof).
+    #[prost(
+        oneof = "tak_packet_v2::PayloadVariant",
+        tags = "31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42"
+    )]
+    pub payload_variant: ::core::option::Option<tak_packet_v2::PayloadVariant>,
+}
+/// Nested message and enum types in `TAKPacketV2`.
+pub mod tak_packet_v2 {
+    ///
+    /// The payload of the packet
+    ///
+    /// Tag 30 was `bool pli` — a PLI carries no fields beyond the common
+    /// envelope (position is in latitude_i/longitude_i), so the boolean was
+    /// pure overhead (~3 wire bytes on every position beacon, the highest-
+    /// frequency packet). PLI is now the IMPLICIT payload: a packet with NO
+    /// payload_variant set decodes as a position report. Tag 30 is reserved at
+    /// the message level (proto3 forbids `reserved` inside a oneof).
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[allow(clippy::large_enum_variant)]
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum PayloadVariant {
+        ///
+        /// ATAK GeoChat message
+        #[prost(message, tag = "31")]
+        Chat(super::GeoChat),
+        ///
+        /// Aircraft track data (ADS-B, military air)
+        #[prost(message, tag = "32")]
+        Aircraft(super::AircraftTrack),
+        ///
+        /// Generic CoT detail XML for unmapped types. Kept as a fallback for CoT
+        /// types not yet promoted to a typed variant; drawings, markers, ranging
+        /// tools, and routes have dedicated variants below and should not land here.
+        #[prost(bytes, tag = "33")]
+        RawDetail(::prost::alloc::vec::Vec<u8>),
+        ///
+        /// User-drawn tactical graphic: circle, rectangle, polygon, polyline,
+        /// telestration, ranging circle, or bullseye. See DrawnShape.
+        #[prost(message, tag = "34")]
+        Shape(super::DrawnShape),
+        ///
+        /// Fixed point of interest: spot marker, waypoint, checkpoint, 2525
+        /// symbol, or custom icon. See Marker.
+        #[prost(message, tag = "35")]
+        Marker(super::Marker),
+        ///
+        /// Range and bearing measurement line. See RangeAndBearing.
+        #[prost(message, tag = "36")]
+        Rab(super::RangeAndBearing),
+        ///
+        /// Named route with ordered waypoints and control points. See Route.
+        #[prost(message, tag = "37")]
+        Route(super::Route),
+        ///
+        /// 9-line MEDEVAC request. See CasevacReport.
+        #[prost(message, tag = "38")]
+        Casevac(super::CasevacReport),
+        ///
+        /// Emergency beacon / 911 alert. See EmergencyAlert.
+        #[prost(message, tag = "39")]
+        Emergency(super::EmergencyAlert),
+        ///
+        /// Task / engage request. See TaskRequest.
+        #[prost(message, tag = "40")]
+        Task(super::TaskRequest),
+        ///
+        /// TAKTALK chat message (CoT type m-t-t). See TakTalkMessage.
+        /// Voice audio itself rides UDP/RTP outside the mesh; this carries the
+        /// text envelope plus a from_voice marker for receiver UX.
+        #[prost(message, tag = "41")]
+        Taktalk(super::TakTalkMessage),
+        ///
+        /// TAKTALK room/membership broadcast (CoT type y-). See TakTalkRoomData.
+        /// Resolves room UUIDs (used in TakTalkMessage.chatroom_id and
+        /// GeoChat.room_id) to display name + roster on receivers.
+        #[prost(message, tag = "42")]
+        TaktalkRoom(super::TakTalkRoomData),
+    }
+}
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum Team {
+    ///
+    /// Unspecifed
+    UnspecifedColor = 0,
+    ///
+    /// White
+    White = 1,
+    ///
+    /// Yellow
+    Yellow = 2,
+    ///
+    /// Orange
+    Orange = 3,
+    ///
+    /// Magenta
+    Magenta = 4,
+    ///
+    /// Red
+    Red = 5,
+    ///
+    /// Maroon
+    Maroon = 6,
+    ///
+    /// Purple
+    Purple = 7,
+    ///
+    /// Dark Blue
+    DarkBlue = 8,
+    ///
+    /// Blue
+    Blue = 9,
+    ///
+    /// Cyan
+    Cyan = 10,
+    ///
+    /// Teal
+    Teal = 11,
+    ///
+    /// Green
+    Green = 12,
+    ///
+    /// Dark Green
+    DarkGreen = 13,
+    ///
+    /// Brown
+    Brown = 14,
+}
+impl Team {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::UnspecifedColor => "Unspecifed_Color",
+            Self::White => "White",
+            Self::Yellow => "Yellow",
+            Self::Orange => "Orange",
+            Self::Magenta => "Magenta",
+            Self::Red => "Red",
+            Self::Maroon => "Maroon",
+            Self::Purple => "Purple",
+            Self::DarkBlue => "Dark_Blue",
+            Self::Blue => "Blue",
+            Self::Cyan => "Cyan",
+            Self::Teal => "Teal",
+            Self::Green => "Green",
+            Self::DarkGreen => "Dark_Green",
+            Self::Brown => "Brown",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "Unspecifed_Color" => Some(Self::UnspecifedColor),
+            "White" => Some(Self::White),
+            "Yellow" => Some(Self::Yellow),
+            "Orange" => Some(Self::Orange),
+            "Magenta" => Some(Self::Magenta),
+            "Red" => Some(Self::Red),
+            "Maroon" => Some(Self::Maroon),
+            "Purple" => Some(Self::Purple),
+            "Dark_Blue" => Some(Self::DarkBlue),
+            "Blue" => Some(Self::Blue),
+            "Cyan" => Some(Self::Cyan),
+            "Teal" => Some(Self::Teal),
+            "Green" => Some(Self::Green),
+            "Dark_Green" => Some(Self::DarkGreen),
+            "Brown" => Some(Self::Brown),
+            _ => None,
+        }
+    }
+}
+///
+/// Role of the group member
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum MemberRole {
+    ///
+    /// Unspecifed
+    Unspecifed = 0,
+    ///
+    /// Team Member
+    TeamMember = 1,
+    ///
+    /// Team Lead
+    TeamLead = 2,
+    ///
+    /// Headquarters
+    Hq = 3,
+    ///
+    /// Airsoft enthusiast
+    Sniper = 4,
+    ///
+    /// Medic
+    Medic = 5,
+    ///
+    /// ForwardObserver
+    ForwardObserver = 6,
+    ///
+    /// Radio Telephone Operator
+    Rto = 7,
+    ///
+    /// Doggo
+    K9 = 8,
+}
+impl MemberRole {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::Unspecifed => "Unspecifed",
+            Self::TeamMember => "TeamMember",
+            Self::TeamLead => "TeamLead",
+            Self::Hq => "HQ",
+            Self::Sniper => "Sniper",
+            Self::Medic => "Medic",
+            Self::ForwardObserver => "ForwardObserver",
+            Self::Rto => "RTO",
+            Self::K9 => "K9",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "Unspecifed" => Some(Self::Unspecifed),
+            "TeamMember" => Some(Self::TeamMember),
+            "TeamLead" => Some(Self::TeamLead),
+            "HQ" => Some(Self::Hq),
+            "Sniper" => Some(Self::Sniper),
+            "Medic" => Some(Self::Medic),
+            "ForwardObserver" => Some(Self::ForwardObserver),
+            "RTO" => Some(Self::Rto),
+            "K9" => Some(Self::K9),
+            _ => None,
+        }
+    }
+}
+///
+/// CoT how field values.
+/// Represents how the coordinates were generated.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum CotHow {
+    ///
+    /// Unspecified
+    Unspecified = 0,
+    ///
+    /// Human entered
+    HE = 1,
+    ///
+    /// Machine generated
+    MG = 2,
+    ///
+    /// Human GPS/INS derived
+    HGIGO = 3,
+    ///
+    /// Machine relayed (imported from another system/gateway)
+    MR = 4,
+    ///
+    /// Machine fused (corroborated from multiple sources)
+    MF = 5,
+    ///
+    /// Machine predicted
+    MP = 6,
+    ///
+    /// Machine simulated
+    MS = 7,
+}
+impl CotHow {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::Unspecified => "CotHow_Unspecified",
+            Self::HE => "CotHow_h_e",
+            Self::MG => "CotHow_m_g",
+            Self::HGIGO => "CotHow_h_g_i_g_o",
+            Self::MR => "CotHow_m_r",
+            Self::MF => "CotHow_m_f",
+            Self::MP => "CotHow_m_p",
+            Self::MS => "CotHow_m_s",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "CotHow_Unspecified" => Some(Self::Unspecified),
+            "CotHow_h_e" => Some(Self::HE),
+            "CotHow_m_g" => Some(Self::MG),
+            "CotHow_h_g_i_g_o" => Some(Self::HGIGO),
+            "CotHow_m_r" => Some(Self::MR),
+            "CotHow_m_f" => Some(Self::MF),
+            "CotHow_m_p" => Some(Self::MP),
+            "CotHow_m_s" => Some(Self::MS),
+            _ => None,
+        }
+    }
+}
+///
+/// Well-known CoT event types.
+/// When the type is known, use the enum value for efficient encoding.
+/// For unknown types, set cot_type_id to CotType_Other and populate cot_type_str.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum CotType {
+    ///
+    /// Unknown or unmapped type, use cot_type_str
+    Other = 0,
+    ///
+    /// a-f-G-U-C: Friendly ground unit combat
+    AFGUC = 1,
+    ///
+    /// a-f-G-U-C-I: Friendly ground unit combat infantry
+    AFGUCI = 2,
+    ///
+    /// a-n-A-C-F: Neutral aircraft civilian fixed-wing
+    ANACF = 3,
+    ///
+    /// a-n-A-C-H: Neutral aircraft civilian helicopter
+    ANACH = 4,
+    ///
+    /// a-n-A-C: Neutral aircraft civilian
+    ANAC = 5,
+    ///
+    /// a-f-A-M-H: Friendly aircraft military helicopter
+    AFAMH = 6,
+    ///
+    /// a-f-A-M: Friendly aircraft military
+    AFAM = 7,
+    ///
+    /// a-f-A-M-F-F: Friendly aircraft military fixed-wing fighter
+    AFAMFF = 8,
+    ///
+    /// a-f-A-M-H-A: Friendly aircraft military helicopter attack
+    AFAMHA = 9,
+    ///
+    /// a-f-A-M-H-U-M: Friendly aircraft military helicopter utility medium
+    AFAMHUM = 10,
+    ///
+    /// a-h-A-M-F-F: Hostile aircraft military fixed-wing fighter
+    AHAMFF = 11,
+    ///
+    /// a-h-A-M-H-A: Hostile aircraft military helicopter attack
+    AHAMHA = 12,
+    ///
+    /// a-u-A-C: Unknown aircraft civilian
+    AUAC = 13,
+    ///
+    /// t-x-d-d: Tasking delete/disconnect
+    TXDD = 14,
+    ///
+    /// a-f-G-E-S-E: Friendly ground equipment sensor
+    AFGESE = 15,
+    ///
+    /// a-f-G-E-V-C: Friendly ground equipment vehicle
+    AFGEVC = 16,
+    ///
+    /// a-f-S: Friendly sea
+    AFS = 17,
+    ///
+    /// a-f-A-M-F: Friendly aircraft military fixed-wing
+    AFAMF = 18,
+    ///
+    /// a-f-A-M-F-C-H: Friendly aircraft military fixed-wing cargo heavy
+    AFAMFCH = 19,
+    ///
+    /// a-f-A-M-F-U-L: Friendly aircraft military fixed-wing utility light
+    AFAMFUL = 20,
+    ///
+    /// a-f-A-M-F-L: Friendly aircraft military fixed-wing liaison
+    AFAMFL = 21,
+    ///
+    /// a-f-A-M-F-P: Friendly aircraft military fixed-wing patrol
+    AFAMFP = 22,
+    ///
+    /// a-f-A-C-H: Friendly aircraft civilian helicopter
+    AFACH = 23,
+    ///
+    /// a-n-A-M-F-Q: Neutral aircraft military fixed-wing drone
+    ANAMFQ = 24,
+    ///
+    /// b-t-f: GeoChat message
+    BTF = 25,
+    ///
+    /// b-r-f-h-c: CASEVAC/MEDEVAC report
+    BRFHC = 26,
+    ///
+    /// b-a-o-pan: Ring the bell / alert all
+    BAOPan = 27,
+    ///
+    /// b-a-o-opn: Troops in contact
+    BAOOpn = 28,
+    ///
+    /// b-a-o-can: Cancel alert
+    BAOCan = 29,
+    ///
+    /// b-a-o-tbl: 911 alert
+    BAOTbl = 30,
+    ///
+    /// b-a-g: Geofence breach alert
+    BAG = 31,
+    ///
+    /// a-f-G: Friendly ground (generic)
+    AFG = 32,
+    ///
+    /// a-f-G-U: Friendly ground unit (generic)
+    AFGU = 33,
+    ///
+    /// a-h-G: Hostile ground (generic)
+    AHG = 34,
+    ///
+    /// a-u-G: Unknown ground (generic)
+    AUG = 35,
+    ///
+    /// a-n-G: Neutral ground (generic)
+    ANG = 36,
+    ///
+    /// b-m-r: Route
+    BMR = 37,
+    ///
+    /// b-m-p-w: Route waypoint
+    BMPW = 38,
+    ///
+    /// b-m-p-s-p-i: Self-position marker
+    BMPSPI = 39,
+    ///
+    /// u-d-f: Freeform shape (line/polygon)
+    UDF = 40,
+    ///
+    /// u-d-r: Rectangle
+    UDR = 41,
+    ///
+    /// u-d-c-c: Circle
+    UDCC = 42,
+    ///
+    /// u-rb-a: Range/bearing line
+    URbA = 43,
+    ///
+    /// a-h-A: Hostile aircraft (generic)
+    AHA = 44,
+    ///
+    /// a-u-A: Unknown aircraft (generic)
+    AUA = 45,
+    ///
+    /// a-f-A-M-H-Q: Friendly aircraft military helicopter observation
+    AFAMHQ = 46,
+    ///
+    /// a-f-A-C-F: Friendly aircraft civilian fixed-wing
+    AFACF = 47,
+    ///
+    /// a-f-A-C: Friendly aircraft civilian (generic)
+    AFAC = 48,
+    ///
+    /// a-f-A-C-L: Friendly aircraft civilian lighter-than-air
+    AFACL = 49,
+    ///
+    /// a-f-A: Friendly aircraft (generic)
+    AFA = 50,
+    ///
+    /// a-f-A-M-H-C: Friendly aircraft military helicopter cargo
+    AFAMHC = 51,
+    ///
+    /// a-n-A-M-F-F: Neutral aircraft military fixed-wing fighter
+    ANAMFF = 52,
+    ///
+    /// a-u-A-C-F: Unknown aircraft civilian fixed-wing
+    AUACF = 53,
+    ///
+    /// a-f-G-U-C-F-T-A: Friendly ground unit combat forces theater aviation
+    AFGUCFTA = 54,
+    ///
+    /// a-f-G-U-C-V-S: Friendly ground unit combat vehicle support
+    AFGUCVS = 55,
+    ///
+    /// a-f-G-U-C-R-X: Friendly ground unit combat reconnaissance exploitation
+    AFGUCRX = 56,
+    ///
+    /// a-f-G-U-C-I-Z: Friendly ground unit combat infantry mechanized
+    AFGUCIZ = 57,
+    ///
+    /// a-f-G-U-C-E-C-W: Friendly ground unit combat engineer construction wheeled
+    AFGUCECW = 58,
+    ///
+    /// a-f-G-U-C-I-L: Friendly ground unit combat infantry light
+    AFGUCIL = 59,
+    ///
+    /// a-f-G-U-C-R-O: Friendly ground unit combat reconnaissance other
+    AFGUCRO = 60,
+    ///
+    /// a-f-G-U-C-R-V: Friendly ground unit combat reconnaissance cavalry
+    AFGUCRV = 61,
+    ///
+    /// a-f-G-U-H: Friendly ground unit headquarters
+    AFGUH = 62,
+    ///
+    /// a-f-G-U-U-M-S-E: Friendly ground unit support medical surgical evacuation
+    AFGUUMSE = 63,
+    ///
+    /// a-f-G-U-S-M-C: Friendly ground unit support maintenance collection
+    AFGUSMC = 64,
+    ///
+    /// a-f-G-E-S: Friendly ground equipment sensor (generic)
+    AFGES = 65,
+    ///
+    /// a-f-G-E: Friendly ground equipment (generic)
+    AFGE = 66,
+    ///
+    /// a-f-G-E-V-C-U: Friendly ground equipment vehicle utility
+    AFGEVCU = 67,
+    ///
+    /// a-f-G-E-V-C-ps: Friendly ground equipment vehicle public safety
+    AFGEVCPs = 68,
+    ///
+    /// a-u-G-E-V: Unknown ground equipment vehicle
+    AUGEV = 69,
+    ///
+    /// a-f-S-N-N-R: Friendly sea surface non-naval rescue
+    AFSNNR = 70,
+    ///
+    /// a-f-F-B: Friendly force boundary
+    AFFB = 71,
+    ///
+    /// b-m-p-s-p-loc: Self-position location marker
+    BMPSPLoc = 72,
+    ///
+    /// b-i-v: Imagery/video
+    BIV = 73,
+    ///
+    /// b-f-t-r: File transfer request
+    BFTR = 74,
+    ///
+    /// b-f-t-a: File transfer acknowledgment
+    BFTA = 75,
+    ///
+    /// u-d-f-m: Freehand telestration / annotation. Anchor at event point,
+    /// geometry carried via DrawnShape.vertices. May be truncated to
+    /// MAX_VERTICES by the sender.
+    UDFM = 76,
+    ///
+    /// u-d-p: Closed polygon. Geometry carried via DrawnShape.vertices,
+    /// implicitly closed (receiver duplicates first vertex as needed).
+    UDP = 77,
+    ///
+    /// b-m-p-s-m: Spot map marker (colored dot at a point of interest).
+    BMPSM = 78,
+    ///
+    /// b-m-p-c: Checkpoint (intermediate route control point).
+    BMPC = 79,
+    ///
+    /// u-r-b-c-c: Ranging circle (range rings centered on the event point).
+    URBCC = 80,
+    ///
+    /// u-r-b-bullseye: Bullseye with configurable range rings and bearing
+    /// reference (magnetic / true / grid).
+    URBBullseye = 81,
+    ///
+    /// a-f-G-E-V-A: Friendly armored vehicle, user-selectable self PLI.
+    AFGEVA = 82,
+    ///
+    /// a-n-A: Neutral aircraft (friendly/hostile/unknown already present).
+    ANA = 83,
+    /// --- 2525 quick-drop: artillery (4) ----------------------------------
+    AUGUCF = 84,
+    ANGUCF = 85,
+    AHGUCF = 86,
+    AFGUCF = 87,
+    /// --- 2525 quick-drop: building (4) -----------------------------------
+    AUGI = 88,
+    ANGI = 89,
+    AHGI = 90,
+    AFGI = 91,
+    /// --- 2525 quick-drop: mine (4) ---------------------------------------
+    AUGEXM = 92,
+    ANGEXM = 93,
+    AHGEXM = 94,
+    AFGEXM = 95,
+    /// --- 2525 quick-drop: ship (3; a-f-S already at 17) ------------------
+    AUS = 96,
+    ANS = 97,
+    AHS = 98,
+    /// --- 2525 quick-drop: sniper (4) -------------------------------------
+    AUGUCID = 99,
+    ANGUCID = 100,
+    AHGUCID = 101,
+    AFGUCID = 102,
+    /// --- 2525 quick-drop: tank (4) ---------------------------------------
+    AUGEVAT = 103,
+    ANGEVAT = 104,
+    AHGEVAT = 105,
+    AFGEVAT = 106,
+    /// --- 2525 quick-drop: troops (3; a-f-G-U-C-I already at 2) -----------
+    AUGUCI = 107,
+    ANGUCI = 108,
+    AHGUCI = 109,
+    /// --- 2525 quick-drop: generic vehicle (3; a-u-G-E-V already at 69) ---
+    ANGEV = 110,
+    AHGEV = 111,
+    AFGEV = 112,
+    ///
+    /// b-m-p-w-GOTO: Go To / bloodhound navigation target.
+    BMPWGoto = 113,
+    ///
+    /// b-m-p-c-ip: Initial point (mission planning).
+    BMPCIp = 114,
+    ///
+    /// b-m-p-c-cp: Contact point (mission planning).
+    BMPCCp = 115,
+    ///
+    /// b-m-p-s-p-op: Observation post.
+    BMPSPOp = 116,
+    ///
+    /// u-d-v: 2D vehicle outline drawn on the map.
+    UDV = 117,
+    ///
+    /// u-d-v-m: 3D vehicle model reference.
+    UDVM = 118,
+    ///
+    /// u-d-c-e: Non-circular ellipse (circle with distinct major/minor axes).
+    UDCE = 119,
+    ///
+    /// b-i-x-i: Quick Pic geotagged image marker. The image itself does not
+    /// ride on LoRa; this event references the image via iconset metadata.
+    BIXI = 120,
+    ///
+    /// b-t-f-d: GeoChat delivered receipt. Carried on the existing `chat`
+    /// payload_variant via GeoChat.receipt_for_uid + receipt_type.
+    BTFD = 121,
+    ///
+    /// b-t-f-r: GeoChat read receipt. Same wire slot as b-t-f-d.
+    BTFR = 122,
+    ///
+    /// b-a-o-c: Custom / generic emergency beacon.
+    BAOC = 123,
+    ///
+    /// t-s: Task / engage request. Structured payload carried via the new
+    /// TaskRequest typed variant.
+    TS = 124,
+    ///
+    /// m-t-t: TAKTALK voice/text chat message. Payload carried via the
+    /// TakTalkMessage typed variant (text, chatroom_id, lang, from_voice).
+    MTT = 125,
+    ///
+    /// y-: TAKTALK room/membership broadcast. Payload carried via the
+    /// TakTalkRoomData typed variant (sender_callsign, room_id, room_name,
+    /// participants). The CoT type literally has a trailing dash and no
+    /// second atom — not a typo.
+    Y = 126,
+}
+impl CotType {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::Other => "CotType_Other",
+            Self::AFGUC => "CotType_a_f_G_U_C",
+            Self::AFGUCI => "CotType_a_f_G_U_C_I",
+            Self::ANACF => "CotType_a_n_A_C_F",
+            Self::ANACH => "CotType_a_n_A_C_H",
+            Self::ANAC => "CotType_a_n_A_C",
+            Self::AFAMH => "CotType_a_f_A_M_H",
+            Self::AFAM => "CotType_a_f_A_M",
+            Self::AFAMFF => "CotType_a_f_A_M_F_F",
+            Self::AFAMHA => "CotType_a_f_A_M_H_A",
+            Self::AFAMHUM => "CotType_a_f_A_M_H_U_M",
+            Self::AHAMFF => "CotType_a_h_A_M_F_F",
+            Self::AHAMHA => "CotType_a_h_A_M_H_A",
+            Self::AUAC => "CotType_a_u_A_C",
+            Self::TXDD => "CotType_t_x_d_d",
+            Self::AFGESE => "CotType_a_f_G_E_S_E",
+            Self::AFGEVC => "CotType_a_f_G_E_V_C",
+            Self::AFS => "CotType_a_f_S",
+            Self::AFAMF => "CotType_a_f_A_M_F",
+            Self::AFAMFCH => "CotType_a_f_A_M_F_C_H",
+            Self::AFAMFUL => "CotType_a_f_A_M_F_U_L",
+            Self::AFAMFL => "CotType_a_f_A_M_F_L",
+            Self::AFAMFP => "CotType_a_f_A_M_F_P",
+            Self::AFACH => "CotType_a_f_A_C_H",
+            Self::ANAMFQ => "CotType_a_n_A_M_F_Q",
+            Self::BTF => "CotType_b_t_f",
+            Self::BRFHC => "CotType_b_r_f_h_c",
+            Self::BAOPan => "CotType_b_a_o_pan",
+            Self::BAOOpn => "CotType_b_a_o_opn",
+            Self::BAOCan => "CotType_b_a_o_can",
+            Self::BAOTbl => "CotType_b_a_o_tbl",
+            Self::BAG => "CotType_b_a_g",
+            Self::AFG => "CotType_a_f_G",
+            Self::AFGU => "CotType_a_f_G_U",
+            Self::AHG => "CotType_a_h_G",
+            Self::AUG => "CotType_a_u_G",
+            Self::ANG => "CotType_a_n_G",
+            Self::BMR => "CotType_b_m_r",
+            Self::BMPW => "CotType_b_m_p_w",
+            Self::BMPSPI => "CotType_b_m_p_s_p_i",
+            Self::UDF => "CotType_u_d_f",
+            Self::UDR => "CotType_u_d_r",
+            Self::UDCC => "CotType_u_d_c_c",
+            Self::URbA => "CotType_u_rb_a",
+            Self::AHA => "CotType_a_h_A",
+            Self::AUA => "CotType_a_u_A",
+            Self::AFAMHQ => "CotType_a_f_A_M_H_Q",
+            Self::AFACF => "CotType_a_f_A_C_F",
+            Self::AFAC => "CotType_a_f_A_C",
+            Self::AFACL => "CotType_a_f_A_C_L",
+            Self::AFA => "CotType_a_f_A",
+            Self::AFAMHC => "CotType_a_f_A_M_H_C",
+            Self::ANAMFF => "CotType_a_n_A_M_F_F",
+            Self::AUACF => "CotType_a_u_A_C_F",
+            Self::AFGUCFTA => "CotType_a_f_G_U_C_F_T_A",
+            Self::AFGUCVS => "CotType_a_f_G_U_C_V_S",
+            Self::AFGUCRX => "CotType_a_f_G_U_C_R_X",
+            Self::AFGUCIZ => "CotType_a_f_G_U_C_I_Z",
+            Self::AFGUCECW => "CotType_a_f_G_U_C_E_C_W",
+            Self::AFGUCIL => "CotType_a_f_G_U_C_I_L",
+            Self::AFGUCRO => "CotType_a_f_G_U_C_R_O",
+            Self::AFGUCRV => "CotType_a_f_G_U_C_R_V",
+            Self::AFGUH => "CotType_a_f_G_U_H",
+            Self::AFGUUMSE => "CotType_a_f_G_U_U_M_S_E",
+            Self::AFGUSMC => "CotType_a_f_G_U_S_M_C",
+            Self::AFGES => "CotType_a_f_G_E_S",
+            Self::AFGE => "CotType_a_f_G_E",
+            Self::AFGEVCU => "CotType_a_f_G_E_V_C_U",
+            Self::AFGEVCPs => "CotType_a_f_G_E_V_C_ps",
+            Self::AUGEV => "CotType_a_u_G_E_V",
+            Self::AFSNNR => "CotType_a_f_S_N_N_R",
+            Self::AFFB => "CotType_a_f_F_B",
+            Self::BMPSPLoc => "CotType_b_m_p_s_p_loc",
+            Self::BIV => "CotType_b_i_v",
+            Self::BFTR => "CotType_b_f_t_r",
+            Self::BFTA => "CotType_b_f_t_a",
+            Self::UDFM => "CotType_u_d_f_m",
+            Self::UDP => "CotType_u_d_p",
+            Self::BMPSM => "CotType_b_m_p_s_m",
+            Self::BMPC => "CotType_b_m_p_c",
+            Self::URBCC => "CotType_u_r_b_c_c",
+            Self::URBBullseye => "CotType_u_r_b_bullseye",
+            Self::AFGEVA => "CotType_a_f_G_E_V_A",
+            Self::ANA => "CotType_a_n_A",
+            Self::AUGUCF => "CotType_a_u_G_U_C_F",
+            Self::ANGUCF => "CotType_a_n_G_U_C_F",
+            Self::AHGUCF => "CotType_a_h_G_U_C_F",
+            Self::AFGUCF => "CotType_a_f_G_U_C_F",
+            Self::AUGI => "CotType_a_u_G_I",
+            Self::ANGI => "CotType_a_n_G_I",
+            Self::AHGI => "CotType_a_h_G_I",
+            Self::AFGI => "CotType_a_f_G_I",
+            Self::AUGEXM => "CotType_a_u_G_E_X_M",
+            Self::ANGEXM => "CotType_a_n_G_E_X_M",
+            Self::AHGEXM => "CotType_a_h_G_E_X_M",
+            Self::AFGEXM => "CotType_a_f_G_E_X_M",
+            Self::AUS => "CotType_a_u_S",
+            Self::ANS => "CotType_a_n_S",
+            Self::AHS => "CotType_a_h_S",
+            Self::AUGUCID => "CotType_a_u_G_U_C_I_d",
+            Self::ANGUCID => "CotType_a_n_G_U_C_I_d",
+            Self::AHGUCID => "CotType_a_h_G_U_C_I_d",
+            Self::AFGUCID => "CotType_a_f_G_U_C_I_d",
+            Self::AUGEVAT => "CotType_a_u_G_E_V_A_T",
+            Self::ANGEVAT => "CotType_a_n_G_E_V_A_T",
+            Self::AHGEVAT => "CotType_a_h_G_E_V_A_T",
+            Self::AFGEVAT => "CotType_a_f_G_E_V_A_T",
+            Self::AUGUCI => "CotType_a_u_G_U_C_I",
+            Self::ANGUCI => "CotType_a_n_G_U_C_I",
+            Self::AHGUCI => "CotType_a_h_G_U_C_I",
+            Self::ANGEV => "CotType_a_n_G_E_V",
+            Self::AHGEV => "CotType_a_h_G_E_V",
+            Self::AFGEV => "CotType_a_f_G_E_V",
+            Self::BMPWGoto => "CotType_b_m_p_w_GOTO",
+            Self::BMPCIp => "CotType_b_m_p_c_ip",
+            Self::BMPCCp => "CotType_b_m_p_c_cp",
+            Self::BMPSPOp => "CotType_b_m_p_s_p_op",
+            Self::UDV => "CotType_u_d_v",
+            Self::UDVM => "CotType_u_d_v_m",
+            Self::UDCE => "CotType_u_d_c_e",
+            Self::BIXI => "CotType_b_i_x_i",
+            Self::BTFD => "CotType_b_t_f_d",
+            Self::BTFR => "CotType_b_t_f_r",
+            Self::BAOC => "CotType_b_a_o_c",
+            Self::TS => "CotType_t_s",
+            Self::MTT => "CotType_m_t_t",
+            Self::Y => "CotType_y",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "CotType_Other" => Some(Self::Other),
+            "CotType_a_f_G_U_C" => Some(Self::AFGUC),
+            "CotType_a_f_G_U_C_I" => Some(Self::AFGUCI),
+            "CotType_a_n_A_C_F" => Some(Self::ANACF),
+            "CotType_a_n_A_C_H" => Some(Self::ANACH),
+            "CotType_a_n_A_C" => Some(Self::ANAC),
+            "CotType_a_f_A_M_H" => Some(Self::AFAMH),
+            "CotType_a_f_A_M" => Some(Self::AFAM),
+            "CotType_a_f_A_M_F_F" => Some(Self::AFAMFF),
+            "CotType_a_f_A_M_H_A" => Some(Self::AFAMHA),
+            "CotType_a_f_A_M_H_U_M" => Some(Self::AFAMHUM),
+            "CotType_a_h_A_M_F_F" => Some(Self::AHAMFF),
+            "CotType_a_h_A_M_H_A" => Some(Self::AHAMHA),
+            "CotType_a_u_A_C" => Some(Self::AUAC),
+            "CotType_t_x_d_d" => Some(Self::TXDD),
+            "CotType_a_f_G_E_S_E" => Some(Self::AFGESE),
+            "CotType_a_f_G_E_V_C" => Some(Self::AFGEVC),
+            "CotType_a_f_S" => Some(Self::AFS),
+            "CotType_a_f_A_M_F" => Some(Self::AFAMF),
+            "CotType_a_f_A_M_F_C_H" => Some(Self::AFAMFCH),
+            "CotType_a_f_A_M_F_U_L" => Some(Self::AFAMFUL),
+            "CotType_a_f_A_M_F_L" => Some(Self::AFAMFL),
+            "CotType_a_f_A_M_F_P" => Some(Self::AFAMFP),
+            "CotType_a_f_A_C_H" => Some(Self::AFACH),
+            "CotType_a_n_A_M_F_Q" => Some(Self::ANAMFQ),
+            "CotType_b_t_f" => Some(Self::BTF),
+            "CotType_b_r_f_h_c" => Some(Self::BRFHC),
+            "CotType_b_a_o_pan" => Some(Self::BAOPan),
+            "CotType_b_a_o_opn" => Some(Self::BAOOpn),
+            "CotType_b_a_o_can" => Some(Self::BAOCan),
+            "CotType_b_a_o_tbl" => Some(Self::BAOTbl),
+            "CotType_b_a_g" => Some(Self::BAG),
+            "CotType_a_f_G" => Some(Self::AFG),
+            "CotType_a_f_G_U" => Some(Self::AFGU),
+            "CotType_a_h_G" => Some(Self::AHG),
+            "CotType_a_u_G" => Some(Self::AUG),
+            "CotType_a_n_G" => Some(Self::ANG),
+            "CotType_b_m_r" => Some(Self::BMR),
+            "CotType_b_m_p_w" => Some(Self::BMPW),
+            "CotType_b_m_p_s_p_i" => Some(Self::BMPSPI),
+            "CotType_u_d_f" => Some(Self::UDF),
+            "CotType_u_d_r" => Some(Self::UDR),
+            "CotType_u_d_c_c" => Some(Self::UDCC),
+            "CotType_u_rb_a" => Some(Self::URbA),
+            "CotType_a_h_A" => Some(Self::AHA),
+            "CotType_a_u_A" => Some(Self::AUA),
+            "CotType_a_f_A_M_H_Q" => Some(Self::AFAMHQ),
+            "CotType_a_f_A_C_F" => Some(Self::AFACF),
+            "CotType_a_f_A_C" => Some(Self::AFAC),
+            "CotType_a_f_A_C_L" => Some(Self::AFACL),
+            "CotType_a_f_A" => Some(Self::AFA),
+            "CotType_a_f_A_M_H_C" => Some(Self::AFAMHC),
+            "CotType_a_n_A_M_F_F" => Some(Self::ANAMFF),
+            "CotType_a_u_A_C_F" => Some(Self::AUACF),
+            "CotType_a_f_G_U_C_F_T_A" => Some(Self::AFGUCFTA),
+            "CotType_a_f_G_U_C_V_S" => Some(Self::AFGUCVS),
+            "CotType_a_f_G_U_C_R_X" => Some(Self::AFGUCRX),
+            "CotType_a_f_G_U_C_I_Z" => Some(Self::AFGUCIZ),
+            "CotType_a_f_G_U_C_E_C_W" => Some(Self::AFGUCECW),
+            "CotType_a_f_G_U_C_I_L" => Some(Self::AFGUCIL),
+            "CotType_a_f_G_U_C_R_O" => Some(Self::AFGUCRO),
+            "CotType_a_f_G_U_C_R_V" => Some(Self::AFGUCRV),
+            "CotType_a_f_G_U_H" => Some(Self::AFGUH),
+            "CotType_a_f_G_U_U_M_S_E" => Some(Self::AFGUUMSE),
+            "CotType_a_f_G_U_S_M_C" => Some(Self::AFGUSMC),
+            "CotType_a_f_G_E_S" => Some(Self::AFGES),
+            "CotType_a_f_G_E" => Some(Self::AFGE),
+            "CotType_a_f_G_E_V_C_U" => Some(Self::AFGEVCU),
+            "CotType_a_f_G_E_V_C_ps" => Some(Self::AFGEVCPs),
+            "CotType_a_u_G_E_V" => Some(Self::AUGEV),
+            "CotType_a_f_S_N_N_R" => Some(Self::AFSNNR),
+            "CotType_a_f_F_B" => Some(Self::AFFB),
+            "CotType_b_m_p_s_p_loc" => Some(Self::BMPSPLoc),
+            "CotType_b_i_v" => Some(Self::BIV),
+            "CotType_b_f_t_r" => Some(Self::BFTR),
+            "CotType_b_f_t_a" => Some(Self::BFTA),
+            "CotType_u_d_f_m" => Some(Self::UDFM),
+            "CotType_u_d_p" => Some(Self::UDP),
+            "CotType_b_m_p_s_m" => Some(Self::BMPSM),
+            "CotType_b_m_p_c" => Some(Self::BMPC),
+            "CotType_u_r_b_c_c" => Some(Self::URBCC),
+            "CotType_u_r_b_bullseye" => Some(Self::URBBullseye),
+            "CotType_a_f_G_E_V_A" => Some(Self::AFGEVA),
+            "CotType_a_n_A" => Some(Self::ANA),
+            "CotType_a_u_G_U_C_F" => Some(Self::AUGUCF),
+            "CotType_a_n_G_U_C_F" => Some(Self::ANGUCF),
+            "CotType_a_h_G_U_C_F" => Some(Self::AHGUCF),
+            "CotType_a_f_G_U_C_F" => Some(Self::AFGUCF),
+            "CotType_a_u_G_I" => Some(Self::AUGI),
+            "CotType_a_n_G_I" => Some(Self::ANGI),
+            "CotType_a_h_G_I" => Some(Self::AHGI),
+            "CotType_a_f_G_I" => Some(Self::AFGI),
+            "CotType_a_u_G_E_X_M" => Some(Self::AUGEXM),
+            "CotType_a_n_G_E_X_M" => Some(Self::ANGEXM),
+            "CotType_a_h_G_E_X_M" => Some(Self::AHGEXM),
+            "CotType_a_f_G_E_X_M" => Some(Self::AFGEXM),
+            "CotType_a_u_S" => Some(Self::AUS),
+            "CotType_a_n_S" => Some(Self::ANS),
+            "CotType_a_h_S" => Some(Self::AHS),
+            "CotType_a_u_G_U_C_I_d" => Some(Self::AUGUCID),
+            "CotType_a_n_G_U_C_I_d" => Some(Self::ANGUCID),
+            "CotType_a_h_G_U_C_I_d" => Some(Self::AHGUCID),
+            "CotType_a_f_G_U_C_I_d" => Some(Self::AFGUCID),
+            "CotType_a_u_G_E_V_A_T" => Some(Self::AUGEVAT),
+            "CotType_a_n_G_E_V_A_T" => Some(Self::ANGEVAT),
+            "CotType_a_h_G_E_V_A_T" => Some(Self::AHGEVAT),
+            "CotType_a_f_G_E_V_A_T" => Some(Self::AFGEVAT),
+            "CotType_a_u_G_U_C_I" => Some(Self::AUGUCI),
+            "CotType_a_n_G_U_C_I" => Some(Self::ANGUCI),
+            "CotType_a_h_G_U_C_I" => Some(Self::AHGUCI),
+            "CotType_a_n_G_E_V" => Some(Self::ANGEV),
+            "CotType_a_h_G_E_V" => Some(Self::AHGEV),
+            "CotType_a_f_G_E_V" => Some(Self::AFGEV),
+            "CotType_b_m_p_w_GOTO" => Some(Self::BMPWGoto),
+            "CotType_b_m_p_c_ip" => Some(Self::BMPCIp),
+            "CotType_b_m_p_c_cp" => Some(Self::BMPCCp),
+            "CotType_b_m_p_s_p_op" => Some(Self::BMPSPOp),
+            "CotType_u_d_v" => Some(Self::UDV),
+            "CotType_u_d_v_m" => Some(Self::UDVM),
+            "CotType_u_d_c_e" => Some(Self::UDCE),
+            "CotType_b_i_x_i" => Some(Self::BIXI),
+            "CotType_b_t_f_d" => Some(Self::BTFD),
+            "CotType_b_t_f_r" => Some(Self::BTFR),
+            "CotType_b_a_o_c" => Some(Self::BAOC),
+            "CotType_t_s" => Some(Self::TS),
+            "CotType_m_t_t" => Some(Self::MTT),
+            "CotType_y" => Some(Self::Y),
+            _ => None,
+        }
+    }
+}
+///
+/// Geopoint and altitude source
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum GeoPointSource {
+    ///
+    /// Unspecified
+    Unspecified = 0,
+    ///
+    /// GPS derived
+    Gps = 1,
+    ///
+    /// User entered
+    User = 2,
+    ///
+    /// Network/external
+    Network = 3,
+}
+impl GeoPointSource {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::Unspecified => "GeoPointSource_Unspecified",
+            Self::Gps => "GeoPointSource_GPS",
+            Self::User => "GeoPointSource_USER",
+            Self::Network => "GeoPointSource_NETWORK",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "GeoPointSource_Unspecified" => Some(Self::Unspecified),
+            "GeoPointSource_GPS" => Some(Self::Gps),
+            "GeoPointSource_USER" => Some(Self::User),
+            "GeoPointSource_NETWORK" => Some(Self::Network),
+            _ => None,
+        }
+    }
+}
+///
 /// Module Config
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
@@ -2114,7 +5522,7 @@ pub struct ModuleConfig {
     /// TODO: REPLACE
     #[prost(
         oneof = "module_config::PayloadVariant",
-        tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13"
+        tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16"
     )]
     pub payload_variant: ::core::option::Option<module_config::PayloadVariant>,
 }
@@ -2157,7 +5565,8 @@ pub mod module_config {
         #[prost(bool, tag = "5")]
         pub encryption_enabled: bool,
         ///
-        /// Whether to send / consume json packets on MQTT
+        /// Deprecated: JSON packet support on MQTT was removed, and this field is ignored.
+        #[deprecated]
         #[prost(bool, tag = "6")]
         pub json_enabled: bool,
         ///
@@ -2197,6 +5606,10 @@ pub mod module_config {
         /// Bits of precision for the location sent (default of 32 is full precision).
         #[prost(uint32, tag = "2")]
         pub position_precision: u32,
+        ///
+        /// Whether we have opted-in to report our location to the map
+        #[prost(bool, tag = "3")]
+        pub should_report_location: bool,
     }
     ///
     /// RemoteHardwareModule Config
@@ -2474,6 +5887,71 @@ pub mod module_config {
         pub ble_threshold: i32,
     }
     ///
+    /// Config for the Traffic Management module.
+    /// Provides packet inspection and traffic shaping to help reduce channel utilization
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct TrafficManagementConfig {
+        ///
+        /// Master enable for traffic management module
+        #[prost(bool, tag = "1")]
+        pub enabled: bool,
+        ///
+        /// Enable position deduplication to drop redundant position broadcasts
+        #[prost(bool, tag = "2")]
+        pub position_dedup_enabled: bool,
+        ///
+        /// Number of bits of precision for position deduplication (0-32)
+        #[prost(uint32, tag = "3")]
+        pub position_precision_bits: u32,
+        ///
+        /// Minimum interval in seconds between position updates from the same node
+        #[prost(uint32, tag = "4")]
+        pub position_min_interval_secs: u32,
+        ///
+        /// Enable direct response to NodeInfo requests from local cache
+        #[prost(bool, tag = "5")]
+        pub nodeinfo_direct_response: bool,
+        ///
+        /// Minimum hop distance from requestor before responding to NodeInfo requests
+        #[prost(uint32, tag = "6")]
+        pub nodeinfo_direct_response_max_hops: u32,
+        ///
+        /// Enable per-node rate limiting to throttle chatty nodes
+        #[prost(bool, tag = "7")]
+        pub rate_limit_enabled: bool,
+        ///
+        /// Time window in seconds for rate limiting calculations
+        #[prost(uint32, tag = "8")]
+        pub rate_limit_window_secs: u32,
+        ///
+        /// Maximum packets allowed per node within the rate limit window
+        #[prost(uint32, tag = "9")]
+        pub rate_limit_max_packets: u32,
+        ///
+        /// Enable dropping of unknown/undecryptable packets per rate_limit_window_secs
+        #[prost(bool, tag = "10")]
+        pub drop_unknown_enabled: bool,
+        ///
+        /// Number of unknown packets before dropping from a node
+        #[prost(uint32, tag = "11")]
+        pub unknown_packet_threshold: u32,
+        ///
+        /// Set hop_limit to 0 for relayed telemetry broadcasts (own packets unaffected)
+        #[prost(bool, tag = "12")]
+        pub exhaust_hop_telemetry: bool,
+        ///
+        /// Set hop_limit to 0 for relayed position broadcasts (own packets unaffected)
+        #[prost(bool, tag = "13")]
+        pub exhaust_hop_position: bool,
+        ///
+        /// Preserve hop_limit for router-to-router traffic
+        #[prost(bool, tag = "14")]
+        pub router_preserve_hops: bool,
+    }
+    ///
     /// Serial Config
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
@@ -2627,6 +6105,18 @@ pub mod module_config {
             Caltopo = 5,
             /// Ecowitt WS85 weather station
             Ws85 = 6,
+            /// VE.Direct is a serial protocol used by Victron Energy products
+            /// <https://beta.ivc.no/wiki/index.php/Victron_VE_Direct_DIY_Cable>
+            VeDirect = 7,
+            /// Used to configure and view some parameters of MeshSolar.
+            /// <https://heltec.org/project/meshsolar/>
+            MsConfig = 8,
+            /// Logs mesh traffic to the serial pins, ideal for logging via openLog or similar.
+            ///
+            /// includes other packets
+            Log = 9,
+            /// only text (channel & DM)
+            Logtext = 10,
         }
         impl SerialMode {
             /// String value of the enum field names used in the ProtoBuf definition.
@@ -2642,6 +6132,10 @@ pub mod module_config {
                     Self::Nmea => "NMEA",
                     Self::Caltopo => "CALTOPO",
                     Self::Ws85 => "WS85",
+                    Self::VeDirect => "VE_DIRECT",
+                    Self::MsConfig => "MS_CONFIG",
+                    Self::Log => "LOG",
+                    Self::Logtext => "LOGTEXT",
                 }
             }
             /// Creates an enum from field names used in the ProtoBuf definition.
@@ -2654,6 +6148,10 @@ pub mod module_config {
                     "NMEA" => Some(Self::Nmea),
                     "CALTOPO" => Some(Self::Caltopo),
                     "WS85" => Some(Self::Ws85),
+                    "VE_DIRECT" => Some(Self::VeDirect),
+                    "MS_CONFIG" => Some(Self::MsConfig),
+                    "LOG" => Some(Self::Log),
+                    "LOGTEXT" => Some(Self::Logtext),
                     _ => None,
                 }
             }
@@ -2790,6 +6288,11 @@ pub mod module_config {
         /// ESP32 Only
         #[prost(bool, tag = "3")]
         pub save: bool,
+        ///
+        /// Bool indicating that the node should cleanup / destroy it's RangeTest.csv file.
+        /// ESP32 Only
+        #[prost(bool, tag = "4")]
+        pub clear_on_reboot: bool,
     }
     ///
     /// Configuration for both device and environment metrics
@@ -2855,6 +6358,15 @@ pub mod module_config {
         /// Enable/Disable the health telemetry module on-device display
         #[prost(bool, tag = "13")]
         pub health_screen_enabled: bool,
+        ///
+        /// Enable/Disable the device telemetry module to send metrics to the mesh
+        /// Note: We will still send telemtry to the connected phone / client every minute over the API
+        #[prost(bool, tag = "14")]
+        pub device_telemetry_enabled: bool,
+        ///
+        /// Enable/Disable the air quality telemetry measurement module on-device display
+        #[prost(bool, tag = "15")]
+        pub air_quality_screen_enabled: bool,
     }
     ///
     /// Canned Messages Module Config
@@ -2897,11 +6409,13 @@ pub mod module_config {
         pub updown1_enabled: bool,
         ///
         /// Enable/disable CannedMessageModule.
+        #[deprecated]
         #[prost(bool, tag = "9")]
         pub enabled: bool,
         ///
         /// Input event origin accepted by the canned message module.
         /// Can be e.g. "rotEnc1", "upDownEnc1", "scanAndSelect", "cardkb", "serialkb", or keyword "_any"
+        #[deprecated]
         #[prost(string, tag = "10")]
         pub allow_input_source: ::prost::alloc::string::String,
         ///
@@ -3018,6 +6532,36 @@ pub mod module_config {
         pub blue: u32,
     }
     ///
+    /// StatusMessage config - Allows setting a status message for a node to periodically rebroadcast
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct StatusMessageConfig {
+        ///
+        /// The actual status string
+        #[prost(string, tag = "1")]
+        pub node_status: ::prost::alloc::string::String,
+    }
+    ///
+    /// TAK team/role configuration
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct TakConfig {
+        ///
+        /// Team color.
+        /// Default Unspecifed_Color -> firmware uses Cyan
+        #[prost(enumeration = "super::Team", tag = "1")]
+        pub team: i32,
+        ///
+        /// Member role.
+        /// Default Unspecifed -> firmware uses TeamMember
+        #[prost(enumeration = "super::MemberRole", tag = "2")]
+        pub role: i32,
+    }
+    ///
     /// TODO: REPLACE
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
@@ -3076,6 +6620,18 @@ pub mod module_config {
         /// TODO: REPLACE
         #[prost(message, tag = "13")]
         Paxcounter(PaxcounterConfig),
+        ///
+        /// TODO: REPLACE
+        #[prost(message, tag = "14")]
+        Statusmessage(StatusMessageConfig),
+        ///
+        /// Traffic management module config for mesh network optimization
+        #[prost(message, tag = "15")]
+        TrafficManagement(TrafficManagementConfig),
+        ///
+        /// TAK team/role configuration for TAK_TRACKER
+        #[prost(message, tag = "16")]
+        Tak(TakConfig),
     }
 }
 ///
@@ -3219,6 +6775,12 @@ pub enum PortNum {
     /// Same as Text Message but used for critical alerts.
     AlertApp = 11,
     ///
+    /// Module/port for handling key verification requests.
+    KeyVerificationApp = 12,
+    ///
+    /// Module/port for handling primitive remote shell access.
+    RemoteShellApp = 13,
+    ///
     /// Provides a 'ping' service that replies to any packet it receives.
     /// Also serves as a small example module.
     /// ENCODING: ASCII Plaintext
@@ -3231,6 +6793,18 @@ pub enum PortNum {
     /// Paxcounter lib included in the firmware
     /// ENCODING: protobuf
     PaxcounterApp = 34,
+    ///
+    /// Store and Forward++ module included in the firmware
+    /// ENCODING: protobuf
+    /// This module is specifically for Native Linux nodes, and provides a Git-style
+    /// chain of messages.
+    StoreForwardPlusplusApp = 35,
+    ///
+    /// Node Status module
+    /// ENCODING: protobuf
+    /// This module allows setting an extra string of status for a node.
+    /// Broadcasts on change and on a timer, possibly once a day.
+    NodeStatusApp = 36,
     ///
     /// Provides a hardware serial interface to send and receive from the Meshtastic network.
     /// Connect to the RX/TX pins of a device with 38400 8N1. Packets received from the Meshtastic
@@ -3287,6 +6861,29 @@ pub enum PortNum {
     /// PowerStress based monitoring support (for automated power consumption testing)
     PowerstressApp = 74,
     ///
+    /// LoraWAN Payload Transport
+    /// ENCODING: compact binary LoRaWAN uplink (10-byte RF metadata + PHY payload) - see LoRaWANBridgeModule
+    LorawanBridge = 75,
+    ///
+    /// Reticulum Network Stack Tunnel App
+    /// ENCODING: Fragmented RNS Packet. Handled by Meshtastic RNS interface
+    ReticulumTunnelApp = 76,
+    ///
+    /// App for transporting Cayenne Low Power Payload, popular for LoRaWAN sensor nodes. Offers ability to send
+    /// arbitrary telemetry over meshtastic that is not covered by telemetry.proto
+    /// ENCODING: CayenneLLP
+    CayenneApp = 77,
+    ///
+    /// ATAK Plugin V2
+    /// Portnum for payloads from the official Meshtastic ATAK plugin using
+    /// TAKPacketV2 with zstd dictionary compression.
+    AtakPluginV2 = 78,
+    ///
+    /// GroupAlarm integration
+    /// Used for transporting GroupAlarm-related messages between Meshtastic nodes
+    /// and companion applications/services.
+    GroupalarmApp = 112,
+    ///
     /// Private applications should use portnums >= 256.
     /// To simplify initial development and testing you can use "PRIVATE_APP"
     /// in your code without needing to rebuild protobuf files (via [regen-protos.sh](<https://github.com/meshtastic/firmware/blob/master/bin/regen-protos.sh>))
@@ -3318,9 +6915,13 @@ impl PortNum {
             Self::AudioApp => "AUDIO_APP",
             Self::DetectionSensorApp => "DETECTION_SENSOR_APP",
             Self::AlertApp => "ALERT_APP",
+            Self::KeyVerificationApp => "KEY_VERIFICATION_APP",
+            Self::RemoteShellApp => "REMOTE_SHELL_APP",
             Self::ReplyApp => "REPLY_APP",
             Self::IpTunnelApp => "IP_TUNNEL_APP",
             Self::PaxcounterApp => "PAXCOUNTER_APP",
+            Self::StoreForwardPlusplusApp => "STORE_FORWARD_PLUSPLUS_APP",
+            Self::NodeStatusApp => "NODE_STATUS_APP",
             Self::SerialApp => "SERIAL_APP",
             Self::StoreForwardApp => "STORE_FORWARD_APP",
             Self::RangeTestApp => "RANGE_TEST_APP",
@@ -3332,6 +6933,11 @@ impl PortNum {
             Self::AtakPlugin => "ATAK_PLUGIN",
             Self::MapReportApp => "MAP_REPORT_APP",
             Self::PowerstressApp => "POWERSTRESS_APP",
+            Self::LorawanBridge => "LORAWAN_BRIDGE",
+            Self::ReticulumTunnelApp => "RETICULUM_TUNNEL_APP",
+            Self::CayenneApp => "CAYENNE_APP",
+            Self::AtakPluginV2 => "ATAK_PLUGIN_V2",
+            Self::GroupalarmApp => "GROUPALARM_APP",
             Self::PrivateApp => "PRIVATE_APP",
             Self::AtakForwarder => "ATAK_FORWARDER",
             Self::Max => "MAX",
@@ -3352,9 +6958,13 @@ impl PortNum {
             "AUDIO_APP" => Some(Self::AudioApp),
             "DETECTION_SENSOR_APP" => Some(Self::DetectionSensorApp),
             "ALERT_APP" => Some(Self::AlertApp),
+            "KEY_VERIFICATION_APP" => Some(Self::KeyVerificationApp),
+            "REMOTE_SHELL_APP" => Some(Self::RemoteShellApp),
             "REPLY_APP" => Some(Self::ReplyApp),
             "IP_TUNNEL_APP" => Some(Self::IpTunnelApp),
             "PAXCOUNTER_APP" => Some(Self::PaxcounterApp),
+            "STORE_FORWARD_PLUSPLUS_APP" => Some(Self::StoreForwardPlusplusApp),
+            "NODE_STATUS_APP" => Some(Self::NodeStatusApp),
             "SERIAL_APP" => Some(Self::SerialApp),
             "STORE_FORWARD_APP" => Some(Self::StoreForwardApp),
             "RANGE_TEST_APP" => Some(Self::RangeTestApp),
@@ -3366,6 +6976,11 @@ impl PortNum {
             "ATAK_PLUGIN" => Some(Self::AtakPlugin),
             "MAP_REPORT_APP" => Some(Self::MapReportApp),
             "POWERSTRESS_APP" => Some(Self::PowerstressApp),
+            "LORAWAN_BRIDGE" => Some(Self::LorawanBridge),
+            "RETICULUM_TUNNEL_APP" => Some(Self::ReticulumTunnelApp),
+            "CAYENNE_APP" => Some(Self::CayenneApp),
+            "ATAK_PLUGIN_V2" => Some(Self::AtakPluginV2),
+            "GROUPALARM_APP" => Some(Self::GroupalarmApp),
             "PRIVATE_APP" => Some(Self::PrivateApp),
             "ATAK_FORWARDER" => Some(Self::AtakForwarder),
             "MAX" => Some(Self::Max),
@@ -3406,7 +7021,7 @@ pub struct DeviceMetrics {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
 #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
-#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct EnvironmentMetrics {
     ///
     /// Temperature measured
@@ -3490,6 +7105,18 @@ pub struct EnvironmentMetrics {
     /// Rainfall in the last 24 hours in mm
     #[prost(float, optional, tag = "20")]
     pub rainfall_24h: ::core::option::Option<f32>,
+    ///
+    /// Soil moisture measured (% 1-100)
+    #[prost(uint32, optional, tag = "21")]
+    pub soil_moisture: ::core::option::Option<u32>,
+    ///
+    /// Soil temperature measured (*C)
+    #[prost(float, optional, tag = "22")]
+    pub soil_temperature: ::core::option::Option<f32>,
+    ///
+    /// One-wire temperature (*C)
+    #[prost(float, repeated, tag = "23")]
+    pub one_wire_temperature: ::prost::alloc::vec::Vec<f32>,
 }
 ///
 /// Power Metrics (voltage / current / etc)
@@ -3522,66 +7149,154 @@ pub struct PowerMetrics {
     /// Current (Ch3)
     #[prost(float, optional, tag = "6")]
     pub ch3_current: ::core::option::Option<f32>,
+    ///
+    /// Voltage (Ch4)
+    #[prost(float, optional, tag = "7")]
+    pub ch4_voltage: ::core::option::Option<f32>,
+    ///
+    /// Current (Ch4)
+    #[prost(float, optional, tag = "8")]
+    pub ch4_current: ::core::option::Option<f32>,
+    ///
+    /// Voltage (Ch5)
+    #[prost(float, optional, tag = "9")]
+    pub ch5_voltage: ::core::option::Option<f32>,
+    ///
+    /// Current (Ch5)
+    #[prost(float, optional, tag = "10")]
+    pub ch5_current: ::core::option::Option<f32>,
+    ///
+    /// Voltage (Ch6)
+    #[prost(float, optional, tag = "11")]
+    pub ch6_voltage: ::core::option::Option<f32>,
+    ///
+    /// Current (Ch6)
+    #[prost(float, optional, tag = "12")]
+    pub ch6_current: ::core::option::Option<f32>,
+    ///
+    /// Voltage (Ch7)
+    #[prost(float, optional, tag = "13")]
+    pub ch7_voltage: ::core::option::Option<f32>,
+    ///
+    /// Current (Ch7)
+    #[prost(float, optional, tag = "14")]
+    pub ch7_current: ::core::option::Option<f32>,
+    ///
+    /// Voltage (Ch8)
+    #[prost(float, optional, tag = "15")]
+    pub ch8_voltage: ::core::option::Option<f32>,
+    ///
+    /// Current (Ch8)
+    #[prost(float, optional, tag = "16")]
+    pub ch8_current: ::core::option::Option<f32>,
 }
 ///
 /// Air quality metrics
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
 #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
-#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct AirQualityMetrics {
     ///
-    /// Concentration Units Standard PM1.0
+    /// Concentration Units Standard PM1.0 in ug/m3
     #[prost(uint32, optional, tag = "1")]
     pub pm10_standard: ::core::option::Option<u32>,
     ///
-    /// Concentration Units Standard PM2.5
+    /// Concentration Units Standard PM2.5 in ug/m3
     #[prost(uint32, optional, tag = "2")]
     pub pm25_standard: ::core::option::Option<u32>,
     ///
-    /// Concentration Units Standard PM10.0
+    /// Concentration Units Standard PM10.0 in ug/m3
     #[prost(uint32, optional, tag = "3")]
     pub pm100_standard: ::core::option::Option<u32>,
     ///
-    /// Concentration Units Environmental PM1.0
+    /// Concentration Units Environmental PM1.0 in ug/m3
     #[prost(uint32, optional, tag = "4")]
     pub pm10_environmental: ::core::option::Option<u32>,
     ///
-    /// Concentration Units Environmental PM2.5
+    /// Concentration Units Environmental PM2.5 in ug/m3
     #[prost(uint32, optional, tag = "5")]
     pub pm25_environmental: ::core::option::Option<u32>,
     ///
-    /// Concentration Units Environmental PM10.0
+    /// Concentration Units Environmental PM10.0 in ug/m3
     #[prost(uint32, optional, tag = "6")]
     pub pm100_environmental: ::core::option::Option<u32>,
     ///
-    /// 0.3um Particle Count
+    /// 0.3um Particle Count in #/0.1l
     #[prost(uint32, optional, tag = "7")]
     pub particles_03um: ::core::option::Option<u32>,
     ///
-    /// 0.5um Particle Count
+    /// 0.5um Particle Count in #/0.1l
     #[prost(uint32, optional, tag = "8")]
     pub particles_05um: ::core::option::Option<u32>,
     ///
-    /// 1.0um Particle Count
+    /// 1.0um Particle Count in #/0.1l
     #[prost(uint32, optional, tag = "9")]
     pub particles_10um: ::core::option::Option<u32>,
     ///
-    /// 2.5um Particle Count
+    /// 2.5um Particle Count in #/0.1l
     #[prost(uint32, optional, tag = "10")]
     pub particles_25um: ::core::option::Option<u32>,
     ///
-    /// 5.0um Particle Count
+    /// 5.0um Particle Count in #/0.1l
     #[prost(uint32, optional, tag = "11")]
     pub particles_50um: ::core::option::Option<u32>,
     ///
-    /// 10.0um Particle Count
+    /// 10.0um Particle Count in #/0.1l
     #[prost(uint32, optional, tag = "12")]
     pub particles_100um: ::core::option::Option<u32>,
     ///
-    /// 10.0um Particle Count
+    /// CO2 concentration in ppm
     #[prost(uint32, optional, tag = "13")]
     pub co2: ::core::option::Option<u32>,
+    ///
+    /// CO2 sensor temperature in degC
+    #[prost(float, optional, tag = "14")]
+    pub co2_temperature: ::core::option::Option<f32>,
+    ///
+    /// CO2 sensor relative humidity in %
+    #[prost(float, optional, tag = "15")]
+    pub co2_humidity: ::core::option::Option<f32>,
+    ///
+    /// Formaldehyde sensor formaldehyde concentration in ppb
+    #[prost(float, optional, tag = "16")]
+    pub form_formaldehyde: ::core::option::Option<f32>,
+    ///
+    /// Formaldehyde sensor relative humidity in %RH
+    #[prost(float, optional, tag = "17")]
+    pub form_humidity: ::core::option::Option<f32>,
+    ///
+    /// Formaldehyde sensor temperature in degrees Celsius
+    #[prost(float, optional, tag = "18")]
+    pub form_temperature: ::core::option::Option<f32>,
+    ///
+    /// Concentration Units Standard PM4.0 in ug/m3
+    #[prost(uint32, optional, tag = "19")]
+    pub pm40_standard: ::core::option::Option<u32>,
+    ///
+    /// 4.0um Particle Count in #/0.1l
+    #[prost(uint32, optional, tag = "20")]
+    pub particles_40um: ::core::option::Option<u32>,
+    ///
+    /// PM Sensor Temperature
+    #[prost(float, optional, tag = "21")]
+    pub pm_temperature: ::core::option::Option<f32>,
+    ///
+    /// PM Sensor humidity
+    #[prost(float, optional, tag = "22")]
+    pub pm_humidity: ::core::option::Option<f32>,
+    ///
+    /// PM Sensor VOC Index
+    #[prost(float, optional, tag = "23")]
+    pub pm_voc_idx: ::core::option::Option<f32>,
+    ///
+    /// PM Sensor NOx Index
+    #[prost(float, optional, tag = "24")]
+    pub pm_nox_idx: ::core::option::Option<f32>,
+    ///
+    /// Typical Particle Size in um
+    #[prost(float, optional, tag = "25")]
+    pub particles_tps: ::core::option::Option<f32>,
 }
 ///
 /// Local device mesh statistics
@@ -3636,6 +7351,58 @@ pub struct LocalStats {
     /// This will always be zero for ROUTERs/REPEATERs. If this number is high, some other node(s) is/are relaying faster than you.
     #[prost(uint32, tag = "11")]
     pub num_tx_relay_canceled: u32,
+    ///
+    /// Number of bytes used in the heap
+    #[prost(uint32, tag = "12")]
+    pub heap_total_bytes: u32,
+    ///
+    /// Number of bytes free in the heap
+    #[prost(uint32, tag = "13")]
+    pub heap_free_bytes: u32,
+    ///
+    /// Number of packets that were dropped because the transmit queue was full.
+    #[prost(uint32, tag = "14")]
+    pub num_tx_dropped: u32,
+    ///
+    /// Noise floor value measured in dBm
+    #[prost(int32, tag = "15")]
+    pub noise_floor: i32,
+}
+///
+/// Traffic management statistics for mesh network optimization
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct TrafficManagementStats {
+    ///
+    /// Total number of packets inspected by traffic management
+    #[prost(uint32, tag = "1")]
+    pub packets_inspected: u32,
+    ///
+    /// Number of position packets dropped due to deduplication
+    #[prost(uint32, tag = "2")]
+    pub position_dedup_drops: u32,
+    ///
+    /// Number of NodeInfo requests answered from cache
+    #[prost(uint32, tag = "3")]
+    pub nodeinfo_cache_hits: u32,
+    ///
+    /// Number of packets dropped due to rate limiting
+    #[prost(uint32, tag = "4")]
+    pub rate_limit_drops: u32,
+    ///
+    /// Number of unknown/undecryptable packets dropped
+    #[prost(uint32, tag = "5")]
+    pub unknown_packet_drops: u32,
+    ///
+    /// Number of packets with hop_limit exhausted for local-only broadcast
+    #[prost(uint32, tag = "6")]
+    pub hop_exhausted_packets: u32,
+    ///
+    /// Number of times router hop preservation was applied
+    #[prost(uint32, tag = "7")]
+    pub router_hops_preserved: u32,
 }
 ///
 /// Health telemetry metrics
@@ -3658,17 +7425,62 @@ pub struct HealthMetrics {
     pub temperature: ::core::option::Option<f32>,
 }
 ///
+/// Linux host metrics
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct HostMetrics {
+    ///
+    /// Host system uptime
+    #[prost(uint32, tag = "1")]
+    pub uptime_seconds: u32,
+    ///
+    /// Host system free memory
+    #[prost(uint64, tag = "2")]
+    pub freemem_bytes: u64,
+    ///
+    /// Host system disk space free for /
+    #[prost(uint64, tag = "3")]
+    pub diskfree1_bytes: u64,
+    ///
+    /// Secondary system disk space free
+    #[prost(uint64, optional, tag = "4")]
+    pub diskfree2_bytes: ::core::option::Option<u64>,
+    ///
+    /// Tertiary disk space free
+    #[prost(uint64, optional, tag = "5")]
+    pub diskfree3_bytes: ::core::option::Option<u64>,
+    ///
+    /// Host system one minute load in 1/100ths
+    #[prost(uint32, tag = "6")]
+    pub load1: u32,
+    ///
+    /// Host system five minute load  in 1/100ths
+    #[prost(uint32, tag = "7")]
+    pub load5: u32,
+    ///
+    /// Host system fifteen minute load  in 1/100ths
+    #[prost(uint32, tag = "8")]
+    pub load15: u32,
+    ///
+    /// Optional User-provided string for arbitrary host system information
+    /// that doesn't make sense as a dedicated entry.
+    #[prost(string, optional, tag = "9")]
+    pub user_string: ::core::option::Option<::prost::alloc::string::String>,
+}
+///
 /// Types of Measurements the telemetry module is equipped to handle
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
 #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
-#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Telemetry {
     ///
     /// Seconds since 1970 - or 0 for unknown/unset
     #[prost(fixed32, tag = "1")]
     pub time: u32,
-    #[prost(oneof = "telemetry::Variant", tags = "2, 3, 4, 5, 6, 7")]
+    #[prost(oneof = "telemetry::Variant", tags = "2, 3, 4, 5, 6, 7, 8, 9")]
     pub variant: ::core::option::Option<telemetry::Variant>,
 }
 /// Nested message and enum types in `Telemetry`.
@@ -3676,7 +7488,7 @@ pub mod telemetry {
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
     #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
-    #[derive(Clone, Copy, PartialEq, ::prost::Oneof)]
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Variant {
         ///
         /// Key native device metrics such as battery level
@@ -3702,6 +7514,14 @@ pub mod telemetry {
         /// Health telemetry metrics
         #[prost(message, tag = "7")]
         HealthMetrics(super::HealthMetrics),
+        ///
+        /// Linux host metrics
+        #[prost(message, tag = "8")]
+        HostMetrics(super::HostMetrics),
+        ///
+        /// Traffic management statistics
+        #[prost(message, tag = "9")]
+        TrafficManagementStats(super::TrafficManagementStats),
     }
 }
 ///
@@ -3719,6 +7539,38 @@ pub struct Nau7802Config {
     /// The calibration factor for the NAU7802
     #[prost(float, tag = "2")]
     pub calibration_factor: f32,
+}
+///
+/// SEN5X State, for saving to flash
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct Sen5xState {
+    ///
+    /// Last cleaning time for SEN5X
+    #[prost(uint32, tag = "1")]
+    pub last_cleaning_time: u32,
+    ///
+    /// Last cleaning time for SEN5X - valid flag
+    #[prost(bool, tag = "2")]
+    pub last_cleaning_valid: bool,
+    ///
+    /// Config flag for one-shot mode (see admin.proto)
+    #[prost(bool, tag = "3")]
+    pub one_shot_mode: bool,
+    ///
+    /// Last VOC state time for SEN55
+    #[prost(uint32, optional, tag = "4")]
+    pub voc_state_time: ::core::option::Option<u32>,
+    ///
+    /// Last VOC state validity flag for SEN55
+    #[prost(bool, optional, tag = "5")]
+    pub voc_state_valid: ::core::option::Option<bool>,
+    ///
+    /// VOC state array (8x uint8t) for SEN55
+    #[prost(fixed64, optional, tag = "6")]
+    pub voc_state_array: ::core::option::Option<u64>,
 }
 ///
 /// Supported I2C Sensors for telemetry in Meshtastic
@@ -3750,7 +7602,7 @@ pub enum TelemetrySensorType {
     /// High accuracy temperature and pressure
     Bmp280 = 6,
     ///
-    /// High accuracy temperature and humidity
+    /// TODO - REMOVE High accuracy temperature and humidity
     Shtc3 = 7,
     ///
     /// High accuracy pressure
@@ -3765,7 +7617,7 @@ pub enum TelemetrySensorType {
     /// 3-Axis magnetic sensor
     Qmc5883l = 11,
     ///
-    /// High accuracy temperature and humidity
+    /// TODO - REMOVE High accuracy temperature and humidity
     Sht31 = 12,
     ///
     /// PM2.5 air quality sensor
@@ -3780,7 +7632,7 @@ pub enum TelemetrySensorType {
     /// RCWL-9620 Doppler Radar Distance Sensor, used for water level detection
     Rcwl9620 = 16,
     ///
-    /// Sensirion High accuracy temperature and humidity
+    /// TODO - REMOVE Sensirion High accuracy temperature and humidity
     Sht4x = 17,
     ///
     /// VEML7700 high accuracy ambient light(Lux) digital 16-bit resolution sensor.
@@ -3836,6 +7688,60 @@ pub enum TelemetrySensorType {
     ///
     /// DFRobot Gravity tipping bucket rain gauge
     DfrobotRain = 35,
+    ///
+    /// Infineon DPS310 High accuracy pressure and temperature
+    Dps310 = 36,
+    ///
+    /// RAKWireless RAK12035 Soil Moisture Sensor Module
+    Rak12035 = 37,
+    ///
+    /// MAX17261 lipo battery gauge
+    Max17261 = 38,
+    ///
+    /// PCT2075 Temperature Sensor
+    Pct2075 = 39,
+    ///
+    /// ADS1X15 ADC
+    Ads1x15 = 40,
+    ///
+    /// ADS1X15 ADC_ALT
+    Ads1x15Alt = 41,
+    ///
+    /// Sensirion SFA30 Formaldehyde sensor
+    Sfa30 = 42,
+    ///
+    /// SEN5X PM SENSORS
+    Sen5x = 43,
+    ///
+    /// TSL2561 light sensor
+    Tsl2561 = 44,
+    ///
+    /// BH1750 light sensor
+    Bh1750 = 45,
+    ///
+    /// HDC1080 Temperature and Humidity Sensor
+    Hdc1080 = 46,
+    ///
+    /// TODO - REMOVE STH21 Temperature and R. Humidity sensor
+    Sht21 = 47,
+    ///
+    /// Sensirion STC31 CO2 sensor
+    Stc31 = 48,
+    ///
+    /// SCD30 CO2, humidity, temperature sensor
+    Scd30 = 49,
+    ///
+    /// SHT family of sensors for temperature and humidity
+    Shtxx = 50,
+    ///
+    /// DS248X Bridge for one-wire temperature sensors
+    Ds248x = 51,
+    ///
+    /// MMC5983MA 3-Axis Digital Magnetic Sensor
+    Mmc5983ma = 52,
+    ///
+    /// ICM-42607-P 6‑Axis IMU
+    Icm42607p = 53,
 }
 impl TelemetrySensorType {
     /// String value of the enum field names used in the ProtoBuf definition.
@@ -3880,6 +7786,24 @@ impl TelemetrySensorType {
             Self::Radsens => "RADSENS",
             Self::Ina226 => "INA226",
             Self::DfrobotRain => "DFROBOT_RAIN",
+            Self::Dps310 => "DPS310",
+            Self::Rak12035 => "RAK12035",
+            Self::Max17261 => "MAX17261",
+            Self::Pct2075 => "PCT2075",
+            Self::Ads1x15 => "ADS1X15",
+            Self::Ads1x15Alt => "ADS1X15_ALT",
+            Self::Sfa30 => "SFA30",
+            Self::Sen5x => "SEN5X",
+            Self::Tsl2561 => "TSL2561",
+            Self::Bh1750 => "BH1750",
+            Self::Hdc1080 => "HDC1080",
+            Self::Sht21 => "SHT21",
+            Self::Stc31 => "STC31",
+            Self::Scd30 => "SCD30",
+            Self::Shtxx => "SHTXX",
+            Self::Ds248x => "DS248X",
+            Self::Mmc5983ma => "MMC5983MA",
+            Self::Icm42607p => "ICM42607P",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
@@ -3921,6 +7845,24 @@ impl TelemetrySensorType {
             "RADSENS" => Some(Self::Radsens),
             "INA226" => Some(Self::Ina226),
             "DFROBOT_RAIN" => Some(Self::DfrobotRain),
+            "DPS310" => Some(Self::Dps310),
+            "RAK12035" => Some(Self::Rak12035),
+            "MAX17261" => Some(Self::Max17261),
+            "PCT2075" => Some(Self::Pct2075),
+            "ADS1X15" => Some(Self::Ads1x15),
+            "ADS1X15_ALT" => Some(Self::Ads1x15Alt),
+            "SFA30" => Some(Self::Sfa30),
+            "SEN5X" => Some(Self::Sen5x),
+            "TSL2561" => Some(Self::Tsl2561),
+            "BH1750" => Some(Self::Bh1750),
+            "HDC1080" => Some(Self::Hdc1080),
+            "SHT21" => Some(Self::Sht21),
+            "STC31" => Some(Self::Stc31),
+            "SCD30" => Some(Self::Scd30),
+            "SHTXX" => Some(Self::Shtxx),
+            "DS248X" => Some(Self::Ds248x),
+            "MMC5983MA" => Some(Self::Mmc5983ma),
+            "ICM42607P" => Some(Self::Icm42607p),
             _ => None,
         }
     }
@@ -4308,6 +8250,10 @@ pub struct User {
     /// This is sent out to other nodes on the mesh to allow them to compute a shared secret key.
     #[prost(bytes = "vec", tag = "8")]
     pub public_key: ::prost::alloc::vec::Vec<u8>,
+    ///
+    /// Whether or not the node can be messaged
+    #[prost(bool, optional, tag = "9")]
+    pub is_unmessagable: ::core::option::Option<bool>,
 }
 ///
 /// A message used in a traceroute
@@ -4414,6 +8360,14 @@ pub mod routing {
         ///
         /// Admin packet sent using PKC, but not from a public key on the admin key list
         AdminPublicKeyUnauthorized = 37,
+        ///
+        /// Airtime fairness rate limit exceeded for a packet
+        /// This typically enforced per portnum and is used to prevent a single node from monopolizing airtime
+        RateLimitExceeded = 38,
+        ///
+        /// PKI encryption failed, due to no public key for the remote node
+        /// This is different from PKI_UNKNOWN_PUBKEY which indicates a failure upon receiving a packet
+        PkiSendFailPublicKey = 39,
     }
     impl Error {
         /// String value of the enum field names used in the ProtoBuf definition.
@@ -4438,6 +8392,8 @@ pub mod routing {
                 Self::PkiUnknownPubkey => "PKI_UNKNOWN_PUBKEY",
                 Self::AdminBadSessionKey => "ADMIN_BAD_SESSION_KEY",
                 Self::AdminPublicKeyUnauthorized => "ADMIN_PUBLIC_KEY_UNAUTHORIZED",
+                Self::RateLimitExceeded => "RATE_LIMIT_EXCEEDED",
+                Self::PkiSendFailPublicKey => "PKI_SEND_FAIL_PUBLIC_KEY",
             }
         }
         /// Creates an enum from field names used in the ProtoBuf definition.
@@ -4459,6 +8415,8 @@ pub mod routing {
                 "PKI_UNKNOWN_PUBKEY" => Some(Self::PkiUnknownPubkey),
                 "ADMIN_BAD_SESSION_KEY" => Some(Self::AdminBadSessionKey),
                 "ADMIN_PUBLIC_KEY_UNAUTHORIZED" => Some(Self::AdminPublicKeyUnauthorized),
+                "RATE_LIMIT_EXCEEDED" => Some(Self::RateLimitExceeded),
+                "PKI_SEND_FAIL_PUBLIC_KEY" => Some(Self::PkiSendFailPublicKey),
                 _ => None,
             }
         }
@@ -4540,6 +8498,270 @@ pub struct Data {
     pub bitfield: ::core::option::Option<u32>,
 }
 ///
+/// The actual over-the-mesh message doing KeyVerification
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct KeyVerification {
+    ///
+    /// random value Selected by the requesting node
+    #[prost(uint64, tag = "1")]
+    pub nonce: u64,
+    ///
+    /// The final authoritative hash, only to be sent by NodeA at the end of the handshake
+    #[prost(bytes = "vec", tag = "2")]
+    pub hash1: ::prost::alloc::vec::Vec<u8>,
+    ///
+    /// The intermediary hash (actually derived from hash1),
+    /// sent from NodeB to NodeA in response to the initial message.
+    #[prost(bytes = "vec", tag = "3")]
+    pub hash2: ::prost::alloc::vec::Vec<u8>,
+}
+///
+/// The actual over-the-mesh message doing store and forward++
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct StoreForwardPlusPlus {
+    ///
+    /// Which message type is this
+    #[prost(enumeration = "store_forward_plus_plus::SfppMessageType", tag = "1")]
+    pub sfpp_message_type: i32,
+    ///
+    /// The hash of the specific message
+    #[prost(bytes = "vec", tag = "2")]
+    pub message_hash: ::prost::alloc::vec::Vec<u8>,
+    ///
+    /// The hash of a link on a chain
+    #[prost(bytes = "vec", tag = "3")]
+    pub commit_hash: ::prost::alloc::vec::Vec<u8>,
+    ///
+    /// the root hash of a chain
+    #[prost(bytes = "vec", tag = "4")]
+    pub root_hash: ::prost::alloc::vec::Vec<u8>,
+    ///
+    /// The encrypted bytes from a message
+    #[prost(bytes = "vec", tag = "5")]
+    pub message: ::prost::alloc::vec::Vec<u8>,
+    ///
+    /// Message ID of the contained message
+    #[prost(uint32, tag = "6")]
+    pub encapsulated_id: u32,
+    ///
+    /// Destination of the contained message
+    #[prost(uint32, tag = "7")]
+    pub encapsulated_to: u32,
+    ///
+    /// Sender of the contained message
+    #[prost(uint32, tag = "8")]
+    pub encapsulated_from: u32,
+    ///
+    /// The receive time of the message in question
+    #[prost(uint32, tag = "9")]
+    pub encapsulated_rxtime: u32,
+    ///
+    /// Used in a LINK_REQUEST to specify the message X spots back from head
+    #[prost(uint32, tag = "10")]
+    pub chain_count: u32,
+}
+/// Nested message and enum types in `StoreForwardPlusPlus`.
+pub mod store_forward_plus_plus {
+    ///
+    /// Enum of message types
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum SfppMessageType {
+        ///
+        /// Send an announcement of the canonical tip of a chain
+        CanonAnnounce = 0,
+        ///
+        /// Query whether a specific link is on the chain
+        ChainQuery = 1,
+        ///
+        /// Request the next link in the chain
+        LinkRequest = 3,
+        ///
+        /// Provide a link to add to the chain
+        LinkProvide = 4,
+        ///
+        /// If we must fragment, send the first half
+        LinkProvideFirsthalf = 5,
+        ///
+        /// If we must fragment, send the second half
+        LinkProvideSecondhalf = 6,
+    }
+    impl SfppMessageType {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::CanonAnnounce => "CANON_ANNOUNCE",
+                Self::ChainQuery => "CHAIN_QUERY",
+                Self::LinkRequest => "LINK_REQUEST",
+                Self::LinkProvide => "LINK_PROVIDE",
+                Self::LinkProvideFirsthalf => "LINK_PROVIDE_FIRSTHALF",
+                Self::LinkProvideSecondhalf => "LINK_PROVIDE_SECONDHALF",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "CANON_ANNOUNCE" => Some(Self::CanonAnnounce),
+                "CHAIN_QUERY" => Some(Self::ChainQuery),
+                "LINK_REQUEST" => Some(Self::LinkRequest),
+                "LINK_PROVIDE" => Some(Self::LinkProvide),
+                "LINK_PROVIDE_FIRSTHALF" => Some(Self::LinkProvideFirsthalf),
+                "LINK_PROVIDE_SECONDHALF" => Some(Self::LinkProvideSecondhalf),
+                _ => None,
+            }
+        }
+    }
+}
+///
+/// The actual over-the-mesh message doing RemoteShell
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct RemoteShell {
+    ///
+    /// Structured frame operation.
+    #[prost(enumeration = "remote_shell::OpCode", tag = "1")]
+    pub op: i32,
+    ///
+    /// Logical PTY session identifier.
+    #[prost(uint32, tag = "2")]
+    pub session_id: u32,
+    ///
+    /// Monotonic sequence number for this frame.
+    #[prost(uint32, tag = "3")]
+    pub seq: u32,
+    ///
+    /// Cumulative ack sequence number.
+    #[prost(uint32, tag = "4")]
+    pub ack_seq: u32,
+    ///
+    /// Opaque bytes payload for INPUT/OUTPUT/ERROR and other frame bodies.
+    #[prost(bytes = "vec", tag = "5")]
+    pub payload: ::prost::alloc::vec::Vec<u8>,
+    ///
+    /// Terminal size columns used for OPEN/RESIZE signaling.
+    #[prost(uint32, tag = "6")]
+    pub cols: u32,
+    ///
+    /// Terminal size rows used for OPEN/RESIZE signaling.
+    #[prost(uint32, tag = "7")]
+    pub rows: u32,
+    ///
+    /// Bit flags for protocol extensions.
+    #[prost(uint32, tag = "8")]
+    pub flags: u32,
+    ///
+    /// The last sequence number TX'd.
+    #[prost(uint32, tag = "9")]
+    pub last_tx_seq: u32,
+    ///
+    /// The last sequence number RX'd.
+    #[prost(uint32, tag = "10")]
+    pub last_rx_seq: u32,
+}
+/// Nested message and enum types in `RemoteShell`.
+pub mod remote_shell {
+    ///
+    /// Frame op code for PTY session control and stream transport.
+    ///
+    /// Values 1-63 are client->server requests.
+    /// Values 64-127 are server->client responses/events.
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum OpCode {
+        OpUnset = 0,
+        /// Client -> server
+        Open = 1,
+        Input = 2,
+        Resize = 3,
+        Close = 4,
+        Ping = 5,
+        Ack = 6,
+        /// Server -> client
+        OpenOk = 64,
+        Output = 65,
+        Closed = 66,
+        Error = 67,
+        Pong = 68,
+    }
+    impl OpCode {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::OpUnset => "OP_UNSET",
+                Self::Open => "OPEN",
+                Self::Input => "INPUT",
+                Self::Resize => "RESIZE",
+                Self::Close => "CLOSE",
+                Self::Ping => "PING",
+                Self::Ack => "ACK",
+                Self::OpenOk => "OPEN_OK",
+                Self::Output => "OUTPUT",
+                Self::Closed => "CLOSED",
+                Self::Error => "ERROR",
+                Self::Pong => "PONG",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "OP_UNSET" => Some(Self::OpUnset),
+                "OPEN" => Some(Self::Open),
+                "INPUT" => Some(Self::Input),
+                "RESIZE" => Some(Self::Resize),
+                "CLOSE" => Some(Self::Close),
+                "PING" => Some(Self::Ping),
+                "ACK" => Some(Self::Ack),
+                "OPEN_OK" => Some(Self::OpenOk),
+                "OUTPUT" => Some(Self::Output),
+                "CLOSED" => Some(Self::Closed),
+                "ERROR" => Some(Self::Error),
+                "PONG" => Some(Self::Pong),
+                _ => None,
+            }
+        }
+    }
+}
+///
 /// Waypoint message, used to share arbitrary locations across the mesh
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
@@ -4579,6 +8801,16 @@ pub struct Waypoint {
     /// Designator icon for the waypoint in the form of a unicode emoji
     #[prost(fixed32, tag = "8")]
     pub icon: u32,
+}
+///
+/// Message for node status
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct StatusMessage {
+    #[prost(string, tag = "1")]
+    pub status: ::prost::alloc::string::String,
 }
 ///
 /// This message will be proxied over the PhoneAPI for the client to deliver to the MQTT server
@@ -4638,6 +8870,10 @@ pub struct MeshPacket {
     pub from: u32,
     ///
     /// The (immediate) destination for this packet
+    /// If the value is 4,294,967,295 (maximum value of an unsigned 32bit integer), this indicates that the packet was
+    /// not destined for a specific node, but for a channel as indicated by the value of `channel` below.
+    /// If the value is another, this indicates that the packet was destined for a specific
+    /// node (i.e. a kind of "Direct Message" to this node) and not broadcast on a channel.
     #[prost(fixed32, tag = "2")]
     pub to: u32,
     ///
@@ -4740,6 +8976,10 @@ pub struct MeshPacket {
     /// Set by the firmware internally, clients are not supposed to set this.
     #[prost(uint32, tag = "20")]
     pub tx_after: u32,
+    ///
+    /// Indicates which transport mechanism this packet arrived over
+    #[prost(enumeration = "mesh_packet::TransportMechanism", tag = "21")]
+    pub transport_mechanism: i32,
     #[prost(oneof = "mesh_packet::PayloadVariant", tags = "4, 5")]
     pub payload_variant: ::core::option::Option<mesh_packet::PayloadVariant>,
 }
@@ -4901,6 +9141,81 @@ pub mod mesh_packet {
             }
         }
     }
+    ///
+    /// Enum to identify which transport mechanism this packet arrived over
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum TransportMechanism {
+        ///
+        /// The default case is that the node generated a packet itself
+        TransportInternal = 0,
+        ///
+        /// Arrived via the primary LoRa radio
+        TransportLora = 1,
+        ///
+        /// Arrived via a secondary LoRa radio
+        TransportLoraAlt1 = 2,
+        ///
+        /// Arrived via a tertiary LoRa radio
+        TransportLoraAlt2 = 3,
+        ///
+        /// Arrived via a quaternary LoRa radio
+        TransportLoraAlt3 = 4,
+        ///
+        /// Arrived via an MQTT connection
+        TransportMqtt = 5,
+        ///
+        /// Arrived via Multicast UDP
+        TransportMulticastUdp = 6,
+        ///
+        /// Arrived via API connection
+        TransportApi = 7,
+    }
+    impl TransportMechanism {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::TransportInternal => "TRANSPORT_INTERNAL",
+                Self::TransportLora => "TRANSPORT_LORA",
+                Self::TransportLoraAlt1 => "TRANSPORT_LORA_ALT1",
+                Self::TransportLoraAlt2 => "TRANSPORT_LORA_ALT2",
+                Self::TransportLoraAlt3 => "TRANSPORT_LORA_ALT3",
+                Self::TransportMqtt => "TRANSPORT_MQTT",
+                Self::TransportMulticastUdp => "TRANSPORT_MULTICAST_UDP",
+                Self::TransportApi => "TRANSPORT_API",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "TRANSPORT_INTERNAL" => Some(Self::TransportInternal),
+                "TRANSPORT_LORA" => Some(Self::TransportLora),
+                "TRANSPORT_LORA_ALT1" => Some(Self::TransportLoraAlt1),
+                "TRANSPORT_LORA_ALT2" => Some(Self::TransportLoraAlt2),
+                "TRANSPORT_LORA_ALT3" => Some(Self::TransportLoraAlt3),
+                "TRANSPORT_MQTT" => Some(Self::TransportMqtt),
+                "TRANSPORT_MULTICAST_UDP" => Some(Self::TransportMulticastUdp),
+                "TRANSPORT_API" => Some(Self::TransportApi),
+                _ => None,
+            }
+        }
+    }
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
     #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
@@ -4986,6 +9301,17 @@ pub struct NodeInfo {
     /// Persists between NodeDB internal clean ups
     #[prost(bool, tag = "11")]
     pub is_ignored: bool,
+    ///
+    /// True if node public key has been verified.
+    /// Persists between NodeDB internal clean ups
+    /// LSB 0 of the bitfield
+    #[prost(bool, tag = "12")]
+    pub is_key_manually_verified: bool,
+    ///
+    /// True if node has been muted
+    /// Persistes between NodeDB internal clean ups
+    #[prost(bool, tag = "13")]
+    pub is_muted: bool,
 }
 ///
 /// Unique local debugging info for this node
@@ -5019,6 +9345,15 @@ pub struct MyNodeInfo {
     /// The PlatformIO environment used to build this firmware
     #[prost(string, tag = "13")]
     pub pio_env: ::prost::alloc::string::String,
+    ///
+    /// The indicator for whether this device is running event firmware and which
+    #[prost(enumeration = "FirmwareEdition", tag = "14")]
+    pub firmware_edition: i32,
+    ///
+    /// The number of nodes in the nodedb.
+    /// This is used by the phone to know how many NodeInfo packets to expect on want_config
+    #[prost(uint32, tag = "15")]
+    pub nodedb_count: u32,
 }
 ///
 /// Debug output from the device.
@@ -5158,7 +9493,7 @@ pub struct FromRadio {
     /// Log levels, chosen to match python logging conventions.
     #[prost(
         oneof = "from_radio::PayloadVariant",
-        tags = "2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17"
+        tags = "2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18"
     )]
     pub payload_variant: ::core::option::Option<from_radio::PayloadVariant>,
 }
@@ -5243,6 +9578,125 @@ pub mod from_radio {
         /// Persistent data for device-ui
         #[prost(message, tag = "17")]
         DeviceuiConfig(super::DeviceUiConfig),
+        ///
+        /// Lockdown state notification for hardened firmware builds.
+        /// Sent post-config (so unauthorized clients learn they must
+        /// provision/unlock) and after each LockdownAuth admin command
+        /// to report success or failure. Replaces the earlier scheme of
+        /// encoding state as magic-string prefixes inside ClientNotification.
+        #[prost(message, tag = "18")]
+        LockdownStatus(super::LockdownStatus),
+    }
+}
+///
+/// Lockdown state report from firmware to client (for hardened builds
+/// with MESHTASTIC_LOCKDOWN). Sent immediately after config_complete_id
+/// to inform a freshly-connected unauthorized client what it must do,
+/// and again in response to each LockdownAuth admin command.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct LockdownStatus {
+    /// Current lockdown state being reported.
+    #[prost(enumeration = "lockdown_status::State", tag = "1")]
+    pub state: i32,
+    ///
+    /// For LOCKED: machine-readable reason. Known values:
+    ///    "needs_auth"        — storage already unlocked, client must auth
+    ///    "token_missing"     — no boot token on flash
+    ///    "token_expired"     — boot token wall-clock TTL elapsed
+    ///    "token_boots_zero"  — boot token boot-count TTL exhausted
+    ///    "token_hmac_fail"   — token tampered or wrong device
+    ///    "token_dek_fail"    — token DEK decrypt failed
+    ///    "token_wrong_size"  — token file corrupted
+    ///    "token_bad_magic"   — token file corrupted
+    ///    "not_provisioned"   — should generally use NEEDS_PROVISION state instead
+    /// Other values may be added; clients should treat unknown values as
+    /// "locked, ask for passphrase".
+    #[prost(string, tag = "2")]
+    pub lock_reason: ::prost::alloc::string::String,
+    ///
+    /// For UNLOCKED: remaining boots on the issued session token.
+    /// Decrements by 1 on each subsequent boot.
+    #[prost(uint32, tag = "3")]
+    pub boots_remaining: u32,
+    ///
+    /// For UNLOCKED: wall-clock expiry of the issued session token,
+    /// absolute Unix-epoch seconds. 0 = no time limit.
+    #[prost(uint32, tag = "4")]
+    pub valid_until_epoch: u32,
+    ///
+    /// For UNLOCK_FAILED: seconds the client must wait before another
+    /// passphrase attempt will be accepted. 0 = wrong passphrase, no
+    /// backoff (immediate retry allowed but advisable to prompt user).
+    #[prost(uint32, tag = "5")]
+    pub backoff_seconds: u32,
+}
+/// Nested message and enum types in `LockdownStatus`.
+pub mod lockdown_status {
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum State {
+        /// Default; should not be sent.
+        Unspecified = 0,
+        ///
+        /// No passphrase has ever been provisioned on this device.
+        /// Client should prompt the operator to set one.
+        NeedsProvision = 1,
+        ///
+        /// Storage is locked or this client has not authenticated yet.
+        /// lock_reason carries a machine-readable detail string.
+        /// Client should present (or auto-replay) a passphrase via
+        /// AdminMessage.lockdown_auth.
+        Locked = 2,
+        ///
+        /// Passphrase accepted; client is now authorized for this connection.
+        /// boots_remaining and valid_until_epoch describe the active session
+        /// token's TTL.
+        Unlocked = 3,
+        ///
+        /// Passphrase rejected. backoff_seconds is non-zero when rate-limited.
+        UnlockFailed = 4,
+    }
+    impl State {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Unspecified => "STATE_UNSPECIFIED",
+                Self::NeedsProvision => "NEEDS_PROVISION",
+                Self::Locked => "LOCKED",
+                Self::Unlocked => "UNLOCKED",
+                Self::UnlockFailed => "UNLOCK_FAILED",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "STATE_UNSPECIFIED" => Some(Self::Unspecified),
+                "NEEDS_PROVISION" => Some(Self::NeedsProvision),
+                "LOCKED" => Some(Self::Locked),
+                "UNLOCKED" => Some(Self::Unlocked),
+                "UNLOCK_FAILED" => Some(Self::UnlockFailed),
+                _ => None,
+            }
+        }
     }
 }
 ///
@@ -5271,7 +9725,74 @@ pub struct ClientNotification {
     /// The message body of the notification
     #[prost(string, tag = "4")]
     pub message: ::prost::alloc::string::String,
+    #[prost(oneof = "client_notification::PayloadVariant", tags = "11, 12, 13, 14, 15")]
+    pub payload_variant: ::core::option::Option<client_notification::PayloadVariant>,
 }
+/// Nested message and enum types in `ClientNotification`.
+pub mod client_notification {
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum PayloadVariant {
+        #[prost(message, tag = "11")]
+        KeyVerificationNumberInform(super::KeyVerificationNumberInform),
+        #[prost(message, tag = "12")]
+        KeyVerificationNumberRequest(super::KeyVerificationNumberRequest),
+        #[prost(message, tag = "13")]
+        KeyVerificationFinal(super::KeyVerificationFinal),
+        #[prost(message, tag = "14")]
+        DuplicatedPublicKey(super::DuplicatedPublicKey),
+        #[prost(message, tag = "15")]
+        LowEntropyKey(super::LowEntropyKey),
+    }
+}
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct KeyVerificationNumberInform {
+    #[prost(uint64, tag = "1")]
+    pub nonce: u64,
+    #[prost(string, tag = "2")]
+    pub remote_longname: ::prost::alloc::string::String,
+    #[prost(uint32, tag = "3")]
+    pub security_number: u32,
+}
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct KeyVerificationNumberRequest {
+    #[prost(uint64, tag = "1")]
+    pub nonce: u64,
+    #[prost(string, tag = "2")]
+    pub remote_longname: ::prost::alloc::string::String,
+}
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct KeyVerificationFinal {
+    #[prost(uint64, tag = "1")]
+    pub nonce: u64,
+    #[prost(string, tag = "2")]
+    pub remote_longname: ::prost::alloc::string::String,
+    #[prost(bool, tag = "3")]
+    pub is_sender: bool,
+    #[prost(string, tag = "4")]
+    pub verification_characters: ::prost::alloc::string::String,
+}
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct DuplicatedPublicKey {}
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct LowEntropyKey {}
 ///
 /// Individual File info for the device
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -5473,7 +9994,12 @@ pub struct DeviceMetadata {
 #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
 #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct Heartbeat {}
+pub struct Heartbeat {
+    ///
+    /// The nonce of the heartbeat message
+    #[prost(uint32, tag = "1")]
+    pub nonce: u32,
+}
 ///
 /// RemoteHardwarePins associated with a node
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -5674,8 +10200,8 @@ pub enum HardwareModel {
     /// ---------------------------------------------------------------------------
     LoraRelayV1 = 32,
     ///
-    /// TODO: REPLACE
-    Nrf52840dk = 33,
+    /// T-Echo Plus device from LilyGo
+    TEchoPlus = 33,
     ///
     /// TODO: REPLACE
     Ppr = 34,
@@ -5859,6 +10385,165 @@ pub enum HardwareModel {
     /// <https://www.loraitalia.it>
     Meshlink = 87,
     ///
+    /// Seeed XIAO nRF52840 + Wio SX1262 kit
+    XiaoNrf52Kit = 88,
+    ///
+    /// Elecrow ThinkNode M1 & M2
+    /// <https://www.elecrow.com/wiki/ThinkNode-M1_Transceiver_Device(Meshtastic>)_Power_By_nRF52840.html
+    /// <https://www.elecrow.com/wiki/ThinkNode-M2_Transceiver_Device(Meshtastic>)_Power_By_NRF52840.html (this actually uses ESP32-S3)
+    ThinknodeM1 = 89,
+    ThinknodeM2 = 90,
+    ///
+    /// Lilygo T-ETH-Elite
+    TEthElite = 91,
+    ///
+    /// Heltec HRI-3621 industrial probe
+    HeltecSensorHub = 92,
+    ///
+    /// Muzi Works Muzi-Base device
+    MuziBase = 93,
+    ///
+    /// Heltec Magnetic Power Bank with Meshtastic compatible
+    HeltecMeshPocket = 94,
+    ///
+    /// Seeed Solar Node
+    SeeedSolarNode = 95,
+    ///
+    /// NomadStar Meteor Pro <https://nomadstar.ch/>
+    NomadstarMeteorPro = 96,
+    ///
+    /// Elecrow CrowPanel Advance models, ESP32-S3 and TFT with SX1262 radio plugin
+    Crowpanel = 97,
+    ///
+    /// Lilygo LINK32 board with sensors
+    Link32 = 98,
+    ///
+    /// Seeed Tracker L1
+    SeeedWioTrackerL1 = 99,
+    ///
+    /// Seeed Tracker L1 EINK driver
+    SeeedWioTrackerL1Eink = 100,
+    ///
+    /// Muzi Works R1 Neo
+    MuziR1Neo = 101,
+    ///
+    /// Lilygo T-Deck Pro
+    TDeckPro = 102,
+    ///
+    /// Lilygo TLora Pager
+    TLoraPager = 103,
+    ///
+    /// M5Stack Reserved
+    ///
+    /// 0x68
+    M5stackReserved = 104,
+    ///
+    /// RAKwireless WisMesh Tag
+    WismeshTag = 105,
+    ///
+    /// RAKwireless WisBlock Core RAK3312 <https://docs.rakwireless.com/product-categories/wisduo/rak3112-module/overview/>
+    Rak3312 = 106,
+    ///
+    /// Elecrow ThinkNode M5 <https://www.elecrow.com/wiki/ThinkNode_M5_Meshtastic_LoRa_Signal_Transceiver_ESP32-S3.html>
+    ThinknodeM5 = 107,
+    ///
+    /// MeshSolar is an integrated power management and communication solution designed for outdoor low-power devices.
+    /// <https://heltec.org/project/meshsolar/>
+    HeltecMeshSolar = 108,
+    ///
+    /// Lilygo T-Echo Lite
+    TEchoLite = 109,
+    ///
+    /// New Heltec LoRA32 with ESP32-S3 CPU
+    HeltecV4 = 110,
+    ///
+    /// M5Stack C6L
+    M5stackC6l = 111,
+    ///
+    /// M5Stack Cardputer Adv
+    M5stackCardputerAdv = 112,
+    ///
+    /// ESP32S3 main controller with GPS and TFT screen.
+    HeltecWirelessTrackerV2 = 113,
+    ///
+    /// LilyGo T-Watch Ultra
+    TWatchUltra = 114,
+    ///
+    /// Elecrow ThinkNode M3
+    ThinknodeM3 = 115,
+    ///
+    /// RAK WISMESH_TAP_V2 with ESP32-S3 CPU
+    WismeshTapV2 = 116,
+    ///
+    /// RAK3401
+    Rak3401 = 117,
+    ///
+    /// RAK6421 Hat+
+    Rak6421 = 118,
+    ///
+    /// Elecrow ThinkNode M4
+    ThinknodeM4 = 119,
+    ///
+    /// Elecrow ThinkNode M6
+    ThinknodeM6 = 120,
+    ///
+    /// Elecrow Meshstick 1262
+    Meshstick1262 = 121,
+    ///
+    /// LilyGo T-Beam 1W
+    Tbeam1Watt = 122,
+    ///
+    /// LilyGo T5 S3 ePaper Pro (V1 and V2)
+    T5S3EpaperPro = 123,
+    ///
+    /// LilyGo T-Beam BPF (144-148Mhz)
+    TbeamBpf = 124,
+    ///
+    /// LilyGo T-Mini E-paper S3 Kit
+    MiniEpaperS3 = 125,
+    ///
+    /// LilyGo T-Display S3 Pro LR1121
+    TdisplayS3Pro = 126,
+    ///
+    /// Heltec Mesh Node T096 board features an nRF52840 CPU and a TFT screen.
+    HeltecMeshNodeT096 = 127,
+    ///
+    /// Seeed studio T1000-E Pro tracker card. NRF52840 w/ LR2021 radio,
+    /// GPS, button, buzzer, and sensors.
+    TrackerT1000EPro = 128,
+    ///
+    /// Elecrow ThinkNode M7, M8 and M9
+    ThinknodeM7 = 129,
+    ThinknodeM8 = 130,
+    ThinknodeM9 = 131,
+    ///
+    /// The Heltec-V4-R8 uses an ESP32S3R8 chip, plus an SX1262.
+    HeltecV4R8 = 132,
+    ///
+    /// The HELTEC_MESH_NODE_T1 uses an NRF52840 chip, plus an SX1262.
+    HeltecMeshNodeT1 = 133,
+    ///
+    /// B&Q Consulting Station G3: TBD
+    StationG3 = 134,
+    ///
+    /// Lilygo T-Impulse-Plus
+    TImpulsePlus = 135,
+    ///
+    /// Lilygo T-Echo Card
+    TEchoCard = 136,
+    ///
+    /// Seeed Tracker L2
+    SeeedWioTrackerL2 = 137,
+    ///
+    /// Elecrow CrowPanel Advance P4 models, ESP32-P4 and TFT with SX1262 radio plugin
+    CrowpanelP4 = 138,
+    ///
+    /// Heltec Mesh Tower V2
+    HeltecMeshTowerV2 = 139,
+    ///
+    /// Meshnology W10
+    MeshnologyW10 = 140,
+    ///
     /// ------------------------------------------------------------------------------------------------------------------------------------------
     /// Reserved ID For developing private Ports. These will show up in live traffic sparsely, so we can use a high number. Keep it within 8 bits.
     /// ------------------------------------------------------------------------------------------------------------------------------------------
@@ -5904,7 +10589,7 @@ impl HardwareModel {
             Self::Rp2040Lora => "RP2040_LORA",
             Self::StationG2 => "STATION_G2",
             Self::LoraRelayV1 => "LORA_RELAY_V1",
-            Self::Nrf52840dk => "NRF52840DK",
+            Self::TEchoPlus => "T_ECHO_PLUS",
             Self::Ppr => "PPR",
             Self::Genieblocks => "GENIEBLOCKS",
             Self::Nrf52Unknown => "NRF52_UNKNOWN",
@@ -5959,6 +10644,59 @@ impl HardwareModel {
             Self::Routastic => "ROUTASTIC",
             Self::MeshTab => "MESH_TAB",
             Self::Meshlink => "MESHLINK",
+            Self::XiaoNrf52Kit => "XIAO_NRF52_KIT",
+            Self::ThinknodeM1 => "THINKNODE_M1",
+            Self::ThinknodeM2 => "THINKNODE_M2",
+            Self::TEthElite => "T_ETH_ELITE",
+            Self::HeltecSensorHub => "HELTEC_SENSOR_HUB",
+            Self::MuziBase => "MUZI_BASE",
+            Self::HeltecMeshPocket => "HELTEC_MESH_POCKET",
+            Self::SeeedSolarNode => "SEEED_SOLAR_NODE",
+            Self::NomadstarMeteorPro => "NOMADSTAR_METEOR_PRO",
+            Self::Crowpanel => "CROWPANEL",
+            Self::Link32 => "LINK_32",
+            Self::SeeedWioTrackerL1 => "SEEED_WIO_TRACKER_L1",
+            Self::SeeedWioTrackerL1Eink => "SEEED_WIO_TRACKER_L1_EINK",
+            Self::MuziR1Neo => "MUZI_R1_NEO",
+            Self::TDeckPro => "T_DECK_PRO",
+            Self::TLoraPager => "T_LORA_PAGER",
+            Self::M5stackReserved => "M5STACK_RESERVED",
+            Self::WismeshTag => "WISMESH_TAG",
+            Self::Rak3312 => "RAK3312",
+            Self::ThinknodeM5 => "THINKNODE_M5",
+            Self::HeltecMeshSolar => "HELTEC_MESH_SOLAR",
+            Self::TEchoLite => "T_ECHO_LITE",
+            Self::HeltecV4 => "HELTEC_V4",
+            Self::M5stackC6l => "M5STACK_C6L",
+            Self::M5stackCardputerAdv => "M5STACK_CARDPUTER_ADV",
+            Self::HeltecWirelessTrackerV2 => "HELTEC_WIRELESS_TRACKER_V2",
+            Self::TWatchUltra => "T_WATCH_ULTRA",
+            Self::ThinknodeM3 => "THINKNODE_M3",
+            Self::WismeshTapV2 => "WISMESH_TAP_V2",
+            Self::Rak3401 => "RAK3401",
+            Self::Rak6421 => "RAK6421",
+            Self::ThinknodeM4 => "THINKNODE_M4",
+            Self::ThinknodeM6 => "THINKNODE_M6",
+            Self::Meshstick1262 => "MESHSTICK_1262",
+            Self::Tbeam1Watt => "TBEAM_1_WATT",
+            Self::T5S3EpaperPro => "T5_S3_EPAPER_PRO",
+            Self::TbeamBpf => "TBEAM_BPF",
+            Self::MiniEpaperS3 => "MINI_EPAPER_S3",
+            Self::TdisplayS3Pro => "TDISPLAY_S3_PRO",
+            Self::HeltecMeshNodeT096 => "HELTEC_MESH_NODE_T096",
+            Self::TrackerT1000EPro => "TRACKER_T1000_E_PRO",
+            Self::ThinknodeM7 => "THINKNODE_M7",
+            Self::ThinknodeM8 => "THINKNODE_M8",
+            Self::ThinknodeM9 => "THINKNODE_M9",
+            Self::HeltecV4R8 => "HELTEC_V4_R8",
+            Self::HeltecMeshNodeT1 => "HELTEC_MESH_NODE_T1",
+            Self::StationG3 => "STATION_G3",
+            Self::TImpulsePlus => "T_IMPULSE_PLUS",
+            Self::TEchoCard => "T_ECHO_CARD",
+            Self::SeeedWioTrackerL2 => "SEEED_WIO_TRACKER_L2",
+            Self::CrowpanelP4 => "CROWPANEL_P4",
+            Self::HeltecMeshTowerV2 => "HELTEC_MESH_TOWER_V2",
+            Self::MeshnologyW10 => "MESHNOLOGY_W10",
             Self::PrivateHw => "PRIVATE_HW",
         }
     }
@@ -5998,7 +10736,7 @@ impl HardwareModel {
             "RP2040_LORA" => Some(Self::Rp2040Lora),
             "STATION_G2" => Some(Self::StationG2),
             "LORA_RELAY_V1" => Some(Self::LoraRelayV1),
-            "NRF52840DK" => Some(Self::Nrf52840dk),
+            "T_ECHO_PLUS" => Some(Self::TEchoPlus),
             "PPR" => Some(Self::Ppr),
             "GENIEBLOCKS" => Some(Self::Genieblocks),
             "NRF52_UNKNOWN" => Some(Self::Nrf52Unknown),
@@ -6053,6 +10791,59 @@ impl HardwareModel {
             "ROUTASTIC" => Some(Self::Routastic),
             "MESH_TAB" => Some(Self::MeshTab),
             "MESHLINK" => Some(Self::Meshlink),
+            "XIAO_NRF52_KIT" => Some(Self::XiaoNrf52Kit),
+            "THINKNODE_M1" => Some(Self::ThinknodeM1),
+            "THINKNODE_M2" => Some(Self::ThinknodeM2),
+            "T_ETH_ELITE" => Some(Self::TEthElite),
+            "HELTEC_SENSOR_HUB" => Some(Self::HeltecSensorHub),
+            "MUZI_BASE" => Some(Self::MuziBase),
+            "HELTEC_MESH_POCKET" => Some(Self::HeltecMeshPocket),
+            "SEEED_SOLAR_NODE" => Some(Self::SeeedSolarNode),
+            "NOMADSTAR_METEOR_PRO" => Some(Self::NomadstarMeteorPro),
+            "CROWPANEL" => Some(Self::Crowpanel),
+            "LINK_32" => Some(Self::Link32),
+            "SEEED_WIO_TRACKER_L1" => Some(Self::SeeedWioTrackerL1),
+            "SEEED_WIO_TRACKER_L1_EINK" => Some(Self::SeeedWioTrackerL1Eink),
+            "MUZI_R1_NEO" => Some(Self::MuziR1Neo),
+            "T_DECK_PRO" => Some(Self::TDeckPro),
+            "T_LORA_PAGER" => Some(Self::TLoraPager),
+            "M5STACK_RESERVED" => Some(Self::M5stackReserved),
+            "WISMESH_TAG" => Some(Self::WismeshTag),
+            "RAK3312" => Some(Self::Rak3312),
+            "THINKNODE_M5" => Some(Self::ThinknodeM5),
+            "HELTEC_MESH_SOLAR" => Some(Self::HeltecMeshSolar),
+            "T_ECHO_LITE" => Some(Self::TEchoLite),
+            "HELTEC_V4" => Some(Self::HeltecV4),
+            "M5STACK_C6L" => Some(Self::M5stackC6l),
+            "M5STACK_CARDPUTER_ADV" => Some(Self::M5stackCardputerAdv),
+            "HELTEC_WIRELESS_TRACKER_V2" => Some(Self::HeltecWirelessTrackerV2),
+            "T_WATCH_ULTRA" => Some(Self::TWatchUltra),
+            "THINKNODE_M3" => Some(Self::ThinknodeM3),
+            "WISMESH_TAP_V2" => Some(Self::WismeshTapV2),
+            "RAK3401" => Some(Self::Rak3401),
+            "RAK6421" => Some(Self::Rak6421),
+            "THINKNODE_M4" => Some(Self::ThinknodeM4),
+            "THINKNODE_M6" => Some(Self::ThinknodeM6),
+            "MESHSTICK_1262" => Some(Self::Meshstick1262),
+            "TBEAM_1_WATT" => Some(Self::Tbeam1Watt),
+            "T5_S3_EPAPER_PRO" => Some(Self::T5S3EpaperPro),
+            "TBEAM_BPF" => Some(Self::TbeamBpf),
+            "MINI_EPAPER_S3" => Some(Self::MiniEpaperS3),
+            "TDISPLAY_S3_PRO" => Some(Self::TdisplayS3Pro),
+            "HELTEC_MESH_NODE_T096" => Some(Self::HeltecMeshNodeT096),
+            "TRACKER_T1000_E_PRO" => Some(Self::TrackerT1000EPro),
+            "THINKNODE_M7" => Some(Self::ThinknodeM7),
+            "THINKNODE_M8" => Some(Self::ThinknodeM8),
+            "THINKNODE_M9" => Some(Self::ThinknodeM9),
+            "HELTEC_V4_R8" => Some(Self::HeltecV4R8),
+            "HELTEC_MESH_NODE_T1" => Some(Self::HeltecMeshNodeT1),
+            "STATION_G3" => Some(Self::StationG3),
+            "T_IMPULSE_PLUS" => Some(Self::TImpulsePlus),
+            "T_ECHO_CARD" => Some(Self::TEchoCard),
+            "SEEED_WIO_TRACKER_L2" => Some(Self::SeeedWioTrackerL2),
+            "CROWPANEL_P4" => Some(Self::CrowpanelP4),
+            "HELTEC_MESH_TOWER_V2" => Some(Self::HeltecMeshTowerV2),
+            "MESHNOLOGY_W10" => Some(Self::MeshnologyW10),
             "PRIVATE_HW" => Some(Self::PrivateHw),
             _ => None,
         }
@@ -6200,6 +10991,67 @@ impl CriticalErrorCode {
     }
 }
 ///
+/// Enum to indicate to clients whether this firmware is a special firmware build, like an event.
+/// The first 16 values are reserved for non-event special firmwares, like the Smart Citizen use case.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum FirmwareEdition {
+    ///
+    /// Vanilla firmware
+    Vanilla = 0,
+    ///
+    /// Firmware for use in the Smart Citizen environmental monitoring network
+    SmartCitizen = 1,
+    ///
+    /// Open Sauce, the maker conference held yearly in CA
+    OpenSauce = 16,
+    ///
+    /// DEFCON, the yearly hacker conference
+    Defcon = 17,
+    ///
+    /// Burning Man, the yearly hippie gathering in the desert
+    BurningMan = 18,
+    ///
+    /// Hamvention, the Dayton amateur radio convention
+    Hamvention = 19,
+    ///
+    /// Placeholder for DIY and unofficial events
+    DiyEdition = 127,
+}
+impl FirmwareEdition {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::Vanilla => "VANILLA",
+            Self::SmartCitizen => "SMART_CITIZEN",
+            Self::OpenSauce => "OPEN_SAUCE",
+            Self::Defcon => "DEFCON",
+            Self::BurningMan => "BURNING_MAN",
+            Self::Hamvention => "HAMVENTION",
+            Self::DiyEdition => "DIY_EDITION",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "VANILLA" => Some(Self::Vanilla),
+            "SMART_CITIZEN" => Some(Self::SmartCitizen),
+            "OPEN_SAUCE" => Some(Self::OpenSauce),
+            "DEFCON" => Some(Self::Defcon),
+            "BURNING_MAN" => Some(Self::BurningMan),
+            "HAMVENTION" => Some(Self::Hamvention),
+            "DIY_EDITION" => Some(Self::DiyEdition),
+            _ => None,
+        }
+    }
+}
+///
 /// Enum for modules excluded from a device's configuration.
 /// Each value represents a ModuleConfigType that can be toggled as excluded
 /// by setting its corresponding bit in the `excluded_modules` bitmask field.
@@ -6251,6 +11103,12 @@ pub enum ExcludedModules {
     ///
     /// Paxcounter module
     PaxcounterConfig = 4096,
+    ///
+    /// Bluetooth config (not technically a module, but used to indicate bluetooth capabilities)
+    BluetoothConfig = 8192,
+    ///
+    /// Network config (not technically a module, but used to indicate network capabilities)
+    NetworkConfig = 16384,
 }
 impl ExcludedModules {
     /// String value of the enum field names used in the ProtoBuf definition.
@@ -6273,6 +11131,8 @@ impl ExcludedModules {
             Self::AmbientlightingConfig => "AMBIENTLIGHTING_CONFIG",
             Self::DetectionsensorConfig => "DETECTIONSENSOR_CONFIG",
             Self::PaxcounterConfig => "PAXCOUNTER_CONFIG",
+            Self::BluetoothConfig => "BLUETOOTH_CONFIG",
+            Self::NetworkConfig => "NETWORK_CONFIG",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
@@ -6292,6 +11152,8 @@ impl ExcludedModules {
             "AMBIENTLIGHTING_CONFIG" => Some(Self::AmbientlightingConfig),
             "DETECTIONSENSOR_CONFIG" => Some(Self::DetectionsensorConfig),
             "PAXCOUNTER_CONFIG" => Some(Self::PaxcounterConfig),
+            "BLUETOOTH_CONFIG" => Some(Self::BluetoothConfig),
+            "NETWORK_CONFIG" => Some(Self::NetworkConfig),
             _ => None,
         }
     }
@@ -6315,12 +11177,54 @@ pub struct AdminMessage {
     /// TODO: REPLACE
     #[prost(
         oneof = "admin_message::PayloadVariant",
-        tags = "1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 64, 65, 94, 95, 96, 97, 98, 99, 100"
+        tags = "1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 64, 65, 66, 67, 94, 95, 96, 97, 98, 99, 100, 102, 103, 104"
     )]
     pub payload_variant: ::core::option::Option<admin_message::PayloadVariant>,
 }
 /// Nested message and enum types in `AdminMessage`.
 pub mod admin_message {
+    ///
+    /// Input event message to be sent to the node.
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct InputEvent {
+        ///
+        /// The input event code
+        #[prost(uint32, tag = "1")]
+        pub event_code: u32,
+        ///
+        /// Keyboard character code
+        #[prost(uint32, tag = "2")]
+        pub kb_char: u32,
+        ///
+        /// The touch X coordinate
+        #[prost(uint32, tag = "3")]
+        pub touch_x: u32,
+        ///
+        /// The touch Y coordinate
+        #[prost(uint32, tag = "4")]
+        pub touch_y: u32,
+    }
+    ///
+    /// User is requesting an over the air update.
+    /// Node will reboot into the OTA loader
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct OtaEvent {
+        ///
+        /// Tell the node to reboot into OTA mode for firmware update via BLE or WiFi (ESP32 only for now)
+        #[prost(enumeration = "super::OtaMode", tag = "1")]
+        pub reboot_ota_mode: i32,
+        ///
+        /// A 32 byte hash of the OTA firmware.
+        /// Used to verify the integrity of the firmware before applying an update.
+        #[prost(bytes = "vec", tag = "2")]
+        pub ota_hash: ::prost::alloc::vec::Vec<u8>,
+    }
     ///
     /// TODO: REPLACE
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -6364,7 +11268,7 @@ pub mod admin_message {
         /// TODO: REPLACE
         SecurityConfig = 7,
         ///
-        ///
+        /// Session key config
         SessionkeyConfig = 8,
         ///
         /// device-ui config
@@ -6463,6 +11367,15 @@ pub mod admin_message {
         ///
         /// TODO: REPLACE
         PaxcounterConfig = 12,
+        ///
+        /// TODO: REPLACE
+        StatusmessageConfig = 13,
+        ///
+        /// Traffic management module config
+        TrafficmanagementConfig = 14,
+        ///
+        /// TAK module config
+        TakConfig = 15,
     }
     impl ModuleConfigType {
         /// String value of the enum field names used in the ProtoBuf definition.
@@ -6484,6 +11397,9 @@ pub mod admin_message {
                 Self::AmbientlightingConfig => "AMBIENTLIGHTING_CONFIG",
                 Self::DetectionsensorConfig => "DETECTIONSENSOR_CONFIG",
                 Self::PaxcounterConfig => "PAXCOUNTER_CONFIG",
+                Self::StatusmessageConfig => "STATUSMESSAGE_CONFIG",
+                Self::TrafficmanagementConfig => "TRAFFICMANAGEMENT_CONFIG",
+                Self::TakConfig => "TAK_CONFIG",
             }
         }
         /// Creates an enum from field names used in the ProtoBuf definition.
@@ -6502,6 +11418,52 @@ pub mod admin_message {
                 "AMBIENTLIGHTING_CONFIG" => Some(Self::AmbientlightingConfig),
                 "DETECTIONSENSOR_CONFIG" => Some(Self::DetectionsensorConfig),
                 "PAXCOUNTER_CONFIG" => Some(Self::PaxcounterConfig),
+                "STATUSMESSAGE_CONFIG" => Some(Self::StatusmessageConfig),
+                "TRAFFICMANAGEMENT_CONFIG" => Some(Self::TrafficmanagementConfig),
+                "TAK_CONFIG" => Some(Self::TakConfig),
+                _ => None,
+            }
+        }
+    }
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum BackupLocation {
+        ///
+        /// Backup to the internal flash
+        Flash = 0,
+        ///
+        /// Backup to the SD card
+        Sd = 1,
+    }
+    impl BackupLocation {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Flash => "FLASH",
+                Self::Sd => "SD",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "FLASH" => Some(Self::Flash),
+                "SD" => Some(Self::Sd),
                 _ => None,
             }
         }
@@ -6604,6 +11566,23 @@ pub mod admin_message {
         #[prost(uint32, tag = "23")]
         SetScale(u32),
         ///
+        /// Backup the node's preferences
+        #[prost(enumeration = "BackupLocation", tag = "24")]
+        BackupPreferences(i32),
+        ///
+        /// Restore the node's preferences
+        #[prost(enumeration = "BackupLocation", tag = "25")]
+        RestorePreferences(i32),
+        ///
+        /// Remove backups of the node's preferences
+        #[prost(enumeration = "BackupLocation", tag = "26")]
+        RemoveBackupPreferences(i32),
+        ///
+        /// Send an input event to the node.
+        /// This is used to trigger physical input events like button presses, touch events, etc.
+        #[prost(message, tag = "27")]
+        SendInputEvent(InputEvent),
+        ///
         /// Set the owner for this node
         #[prost(message, tag = "32")]
         SetOwner(super::User),
@@ -6677,6 +11656,10 @@ pub mod admin_message {
         #[prost(uint32, tag = "48")]
         RemoveIgnoredNode(u32),
         ///
+        /// Set specified node-num to be muted
+        #[prost(uint32, tag = "49")]
+        ToggleMutedNode(u32),
+        ///
         /// Begins an edit transaction for config, module config, owner, and channel settings changes
         /// This will delay the standard *implicit* save to the file system and subsequent reboot behavior until committed (commit_edit_settings)
         #[prost(bool, tag = "64")]
@@ -6686,12 +11669,22 @@ pub mod admin_message {
         #[prost(bool, tag = "65")]
         CommitEditSettings(bool),
         ///
+        /// Add a contact (User) to the nodedb
+        #[prost(message, tag = "66")]
+        AddContact(super::SharedContact),
+        ///
+        /// Initiate or respond to a key verification request
+        #[prost(message, tag = "67")]
+        KeyVerification(super::KeyVerificationAdmin),
+        ///
         /// Tell the node to factory reset config everything; all device state and configuration will be returned to factory defaults and BLE bonds will be cleared.
         #[prost(int32, tag = "94")]
         FactoryResetDevice(i32),
         ///
         /// Tell the node to reboot into the OTA Firmware in this many seconds (or <0 to cancel reboot)
         /// Only Implemented for ESP32 Devices. This needs to be issued to send a new main firmware via bluetooth.
+        /// Deprecated in favor of reboot_ota_mode in 2.7.17
+        #[deprecated]
         #[prost(int32, tag = "95")]
         RebootOtaSeconds(i32),
         ///
@@ -6713,9 +11706,75 @@ pub mod admin_message {
         FactoryResetConfig(i32),
         ///
         /// Tell the node to reset the nodedb.
-        #[prost(int32, tag = "100")]
-        NodedbReset(i32),
+        /// When true, favorites are preserved through reset.
+        #[prost(bool, tag = "100")]
+        NodedbReset(bool),
+        ///
+        /// Tell the node to reset into the OTA Loader
+        #[prost(message, tag = "102")]
+        OtaRequest(OtaEvent),
+        ///
+        /// Parameters and sensor configuration
+        #[prost(message, tag = "103")]
+        SensorConfig(super::SensorConfig),
+        ///
+        /// Lockdown passphrase delivery / unlock / lock-now command for hardened
+        /// firmware builds (see MESHTASTIC_LOCKDOWN). Used to provision the
+        /// passphrase on first boot, unlock encrypted storage on subsequent
+        /// reboots, re-verify on already-unlocked devices to authorize a new
+        /// client connection, or immediately re-lock the device.
+        ///
+        /// Replaces the earlier scheme that repurposed SecurityConfig.private_key
+        /// to carry passphrase bytes; that hack is retired.
+        #[prost(message, tag = "104")]
+        LockdownAuth(super::LockdownAuth),
     }
+}
+///
+/// Lockdown passphrase delivery payload.
+///
+/// One message handles three operations distinguished by content:
+///    - Provision (first-time): passphrase set, lock_now=false. Firmware
+///      generates DEK, wraps with passphrase-derived KEK, persists.
+///    - Unlock: passphrase set, lock_now=false. Firmware verifies
+///      passphrase against stored DEK, unlocks storage, authorizes the
+///      connection that delivered this packet.
+///    - Lock now: lock_now=true, passphrase ignored. Firmware revokes
+///      all client auth and reboots into the locked state.
+///
+/// Firmware decides between provision and unlock based on its own state
+/// (whether a DEK file already exists). Clients do not need to track
+/// which case applies.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct LockdownAuth {
+    ///
+    /// Passphrase bytes (1-32). Empty when lock_now is true.
+    /// Capped to 32 to match the proto cap on related security fields.
+    #[prost(bytes = "vec", tag = "1")]
+    pub passphrase: ::prost::alloc::vec::Vec<u8>,
+    ///
+    /// Optional override of the boot-count token TTL granted on success.
+    /// 0 = use firmware default (TOKEN_DEFAULT_BOOTS).
+    /// On reboot the firmware decrements this; when it reaches 0 the
+    /// device boots fully locked and requires a fresh passphrase.
+    #[prost(uint32, tag = "2")]
+    pub boots_remaining: u32,
+    ///
+    /// Optional wall-clock expiry for the unlock token, as absolute
+    /// Unix-epoch seconds. 0 = no time limit (only the boot-count TTL
+    /// applies). On boot, if the device RTC is set and now > this value,
+    /// the token is treated as expired.
+    #[prost(uint32, tag = "3")]
+    pub valid_until_epoch: u32,
+    ///
+    /// If true, ignore passphrase fields, immediately revoke all
+    /// connection-level admin authorization, and reboot the device into
+    /// the locked state. Always honoured regardless of current lock state.
+    #[prost(bool, tag = "4")]
+    pub lock_now: bool,
 }
 ///
 /// Parameters for setting up Meshtastic for ameteur radio usage
@@ -6755,6 +11814,259 @@ pub struct NodeRemoteHardwarePinsResponse {
     #[prost(message, repeated, tag = "1")]
     pub node_remote_hardware_pins: ::prost::alloc::vec::Vec<NodeRemoteHardwarePin>,
 }
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SharedContact {
+    ///
+    /// The node number of the contact
+    #[prost(uint32, tag = "1")]
+    pub node_num: u32,
+    ///
+    /// The User of the contact
+    #[prost(message, optional, tag = "2")]
+    pub user: ::core::option::Option<User>,
+    ///
+    /// Add this contact to the blocked / ignored list
+    #[prost(bool, tag = "3")]
+    pub should_ignore: bool,
+    ///
+    /// Set the IS_KEY_MANUALLY_VERIFIED bit
+    #[prost(bool, tag = "4")]
+    pub manually_verified: bool,
+}
+///
+/// This message is used by a client to initiate or complete a key verification
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct KeyVerificationAdmin {
+    #[prost(enumeration = "key_verification_admin::MessageType", tag = "1")]
+    pub message_type: i32,
+    ///
+    /// The nodenum we're requesting
+    #[prost(uint32, tag = "2")]
+    pub remote_nodenum: u32,
+    ///
+    /// The nonce is used to track the connection
+    #[prost(uint64, tag = "3")]
+    pub nonce: u64,
+    ///
+    /// The 4 digit code generated by the remote node, and communicated outside the mesh
+    #[prost(uint32, optional, tag = "4")]
+    pub security_number: ::core::option::Option<u32>,
+}
+/// Nested message and enum types in `KeyVerificationAdmin`.
+pub mod key_verification_admin {
+    ///
+    /// Three stages of this request.
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum MessageType {
+        ///
+        /// This is the first stage, where a client initiates
+        InitiateVerification = 0,
+        ///
+        /// After the nonce has been returned over the mesh, the client prompts for the security number
+        /// And uses this message to provide it to the node.
+        ProvideSecurityNumber = 1,
+        ///
+        /// Once the user has compared the verification message, this message notifies the node.
+        DoVerify = 2,
+        ///
+        /// This is the cancel path, can be taken at any point
+        DoNotVerify = 3,
+    }
+    impl MessageType {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::InitiateVerification => "INITIATE_VERIFICATION",
+                Self::ProvideSecurityNumber => "PROVIDE_SECURITY_NUMBER",
+                Self::DoVerify => "DO_VERIFY",
+                Self::DoNotVerify => "DO_NOT_VERIFY",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "INITIATE_VERIFICATION" => Some(Self::InitiateVerification),
+                "PROVIDE_SECURITY_NUMBER" => Some(Self::ProvideSecurityNumber),
+                "DO_VERIFY" => Some(Self::DoVerify),
+                "DO_NOT_VERIFY" => Some(Self::DoNotVerify),
+                _ => None,
+            }
+        }
+    }
+}
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct SensorConfig {
+    ///
+    /// SCD4X CO2 Sensor configuration
+    #[prost(message, optional, tag = "1")]
+    pub scd4x_config: ::core::option::Option<Scd4xConfig>,
+    ///
+    /// SEN5X PM Sensor configuration
+    #[prost(message, optional, tag = "2")]
+    pub sen5x_config: ::core::option::Option<Sen5xConfig>,
+    ///
+    /// SCD30 CO2 Sensor configuration
+    #[prost(message, optional, tag = "3")]
+    pub scd30_config: ::core::option::Option<Scd30Config>,
+    ///
+    /// SHTXX temperature and relative humidity sensor configuration
+    #[prost(message, optional, tag = "4")]
+    pub shtxx_config: ::core::option::Option<ShtxxConfig>,
+}
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct Scd4xConfig {
+    ///
+    /// Set Automatic self-calibration enabled
+    #[prost(bool, optional, tag = "1")]
+    pub set_asc: ::core::option::Option<bool>,
+    ///
+    /// Recalibration target CO2 concentration in ppm (FRC or ASC)
+    #[prost(uint32, optional, tag = "2")]
+    pub set_target_co2_conc: ::core::option::Option<u32>,
+    ///
+    /// Reference temperature in degC
+    #[prost(float, optional, tag = "3")]
+    pub set_temperature: ::core::option::Option<f32>,
+    ///
+    /// Altitude of sensor in meters above sea level. 0 - 3000m (overrides ambient pressure)
+    #[prost(uint32, optional, tag = "4")]
+    pub set_altitude: ::core::option::Option<u32>,
+    ///
+    /// Sensor ambient pressure in Pa. 70000 - 120000 Pa (overrides altitude)
+    #[prost(uint32, optional, tag = "5")]
+    pub set_ambient_pressure: ::core::option::Option<u32>,
+    ///
+    /// Perform a factory reset of the sensor
+    #[prost(bool, optional, tag = "6")]
+    pub factory_reset: ::core::option::Option<bool>,
+    ///
+    /// Power mode for sensor (true for low power, false for normal)
+    #[prost(bool, optional, tag = "7")]
+    pub set_power_mode: ::core::option::Option<bool>,
+}
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct Sen5xConfig {
+    ///
+    /// Reference temperature in degC
+    #[prost(float, optional, tag = "1")]
+    pub set_temperature: ::core::option::Option<f32>,
+    ///
+    /// One-shot mode (true for low power - one-shot mode, false for normal - continuous mode)
+    #[prost(bool, optional, tag = "2")]
+    pub set_one_shot_mode: ::core::option::Option<bool>,
+}
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct Scd30Config {
+    ///
+    /// Set Automatic self-calibration enabled
+    #[prost(bool, optional, tag = "1")]
+    pub set_asc: ::core::option::Option<bool>,
+    ///
+    /// Recalibration target CO2 concentration in ppm (FRC or ASC)
+    #[prost(uint32, optional, tag = "2")]
+    pub set_target_co2_conc: ::core::option::Option<u32>,
+    ///
+    /// Reference temperature in degC
+    #[prost(float, optional, tag = "3")]
+    pub set_temperature: ::core::option::Option<f32>,
+    ///
+    /// Altitude of sensor in meters above sea level. 0 - 3000m (overrides ambient pressure)
+    #[prost(uint32, optional, tag = "4")]
+    pub set_altitude: ::core::option::Option<u32>,
+    ///
+    /// Power mode for sensor (true for low power, false for normal)
+    #[prost(uint32, optional, tag = "5")]
+    pub set_measurement_interval: ::core::option::Option<u32>,
+    ///
+    /// Perform a factory reset of the sensor
+    #[prost(bool, optional, tag = "6")]
+    pub soft_reset: ::core::option::Option<bool>,
+}
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ShtxxConfig {
+    ///
+    /// Accuracy mode (0 = low, 1 = medium, 2 = high)
+    #[prost(uint32, optional, tag = "1")]
+    pub set_accuracy: ::core::option::Option<u32>,
+}
+///
+/// Firmware update mode for OTA updates
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum OtaMode {
+    ///
+    /// Do not reboot into OTA mode
+    NoRebootOta = 0,
+    ///
+    /// Reboot into OTA mode for BLE firmware update
+    OtaBle = 1,
+    ///
+    /// Reboot into OTA mode for WiFi firmware update
+    OtaWifi = 2,
+}
+impl OtaMode {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::NoRebootOta => "NO_REBOOT_OTA",
+            Self::OtaBle => "OTA_BLE",
+            Self::OtaWifi => "OTA_WIFI",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "NO_REBOOT_OTA" => Some(Self::NoRebootOta),
+            "OTA_BLE" => Some(Self::OtaBle),
+            "OTA_WIFI" => Some(Self::OtaWifi),
+            _ => None,
+        }
+    }
+}
 ///
 /// This is the most compact possible representation for a set of channels.
 /// It includes only one PRIMARY channel (which must be first) and
@@ -6774,327 +12086,6 @@ pub struct ChannelSet {
     /// LoRa config
     #[prost(message, optional, tag = "2")]
     pub lora_config: ::core::option::Option<config::LoRaConfig>,
-}
-///
-/// Packets for the official ATAK Plugin
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
-#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct TakPacket {
-    ///
-    /// Are the payloads strings compressed for LoRA transport?
-    #[prost(bool, tag = "1")]
-    pub is_compressed: bool,
-    ///
-    /// The contact / callsign for ATAK user
-    #[prost(message, optional, tag = "2")]
-    pub contact: ::core::option::Option<Contact>,
-    ///
-    /// The group for ATAK user
-    #[prost(message, optional, tag = "3")]
-    pub group: ::core::option::Option<Group>,
-    ///
-    /// The status of the ATAK EUD
-    #[prost(message, optional, tag = "4")]
-    pub status: ::core::option::Option<Status>,
-    ///
-    /// The payload of the packet
-    #[prost(oneof = "tak_packet::PayloadVariant", tags = "5, 6, 7")]
-    pub payload_variant: ::core::option::Option<tak_packet::PayloadVariant>,
-}
-/// Nested message and enum types in `TAKPacket`.
-pub mod tak_packet {
-    ///
-    /// The payload of the packet
-    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
-    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
-    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
-    pub enum PayloadVariant {
-        ///
-        /// TAK position report
-        #[prost(message, tag = "5")]
-        Pli(super::Pli),
-        ///
-        /// ATAK GeoChat message
-        #[prost(message, tag = "6")]
-        Chat(super::GeoChat),
-        ///
-        /// Generic CoT detail XML
-        /// May be compressed / truncated by the sender (EUD)
-        #[prost(bytes, tag = "7")]
-        Detail(::prost::alloc::vec::Vec<u8>),
-    }
-}
-///
-/// ATAK GeoChat message
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
-#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct GeoChat {
-    ///
-    /// The text message
-    #[prost(string, tag = "1")]
-    pub message: ::prost::alloc::string::String,
-    ///
-    /// Uid recipient of the message
-    #[prost(string, optional, tag = "2")]
-    pub to: ::core::option::Option<::prost::alloc::string::String>,
-    ///
-    /// Callsign of the recipient for the message
-    #[prost(string, optional, tag = "3")]
-    pub to_callsign: ::core::option::Option<::prost::alloc::string::String>,
-}
-///
-/// ATAK Group
-/// <__group role='Team Member' name='Cyan'/>
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
-#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
-#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct Group {
-    ///
-    /// Role of the group member
-    #[prost(enumeration = "MemberRole", tag = "1")]
-    pub role: i32,
-    ///
-    /// Team (color)
-    /// Default Cyan
-    #[prost(enumeration = "Team", tag = "2")]
-    pub team: i32,
-}
-///
-/// ATAK EUD Status
-/// <status battery='100' />
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
-#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
-#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct Status {
-    ///
-    /// Battery level
-    #[prost(uint32, tag = "1")]
-    pub battery: u32,
-}
-///
-/// ATAK Contact
-/// <contact endpoint='0.0.0.0:4242:tcp' phone='+12345678' callsign='FALKE'/>
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
-#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct Contact {
-    ///
-    /// Callsign
-    #[prost(string, tag = "1")]
-    pub callsign: ::prost::alloc::string::String,
-    ///
-    /// Device callsign
-    ///
-    ///
-    /// IP address of endpoint in integer form (0.0.0.0 default)
-    #[prost(string, tag = "2")]
-    pub device_callsign: ::prost::alloc::string::String,
-}
-///
-/// Position Location Information from ATAK
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
-#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
-#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct Pli {
-    ///
-    /// The new preferred location encoding, multiply by 1e-7 to get degrees
-    /// in floating point
-    #[prost(sfixed32, tag = "1")]
-    pub latitude_i: i32,
-    ///
-    /// The new preferred location encoding, multiply by 1e-7 to get degrees
-    /// in floating point
-    #[prost(sfixed32, tag = "2")]
-    pub longitude_i: i32,
-    ///
-    /// Altitude (ATAK prefers HAE)
-    #[prost(int32, tag = "3")]
-    pub altitude: i32,
-    ///
-    /// Speed
-    #[prost(uint32, tag = "4")]
-    pub speed: u32,
-    ///
-    /// Course in degrees
-    #[prost(uint32, tag = "5")]
-    pub course: u32,
-}
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
-#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-#[repr(i32)]
-pub enum Team {
-    ///
-    /// Unspecifed
-    UnspecifedColor = 0,
-    ///
-    /// White
-    White = 1,
-    ///
-    /// Yellow
-    Yellow = 2,
-    ///
-    /// Orange
-    Orange = 3,
-    ///
-    /// Magenta
-    Magenta = 4,
-    ///
-    /// Red
-    Red = 5,
-    ///
-    /// Maroon
-    Maroon = 6,
-    ///
-    /// Purple
-    Purple = 7,
-    ///
-    /// Dark Blue
-    DarkBlue = 8,
-    ///
-    /// Blue
-    Blue = 9,
-    ///
-    /// Cyan
-    Cyan = 10,
-    ///
-    /// Teal
-    Teal = 11,
-    ///
-    /// Green
-    Green = 12,
-    ///
-    /// Dark Green
-    DarkGreen = 13,
-    ///
-    /// Brown
-    Brown = 14,
-}
-impl Team {
-    /// String value of the enum field names used in the ProtoBuf definition.
-    ///
-    /// The values are not transformed in any way and thus are considered stable
-    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
-    pub fn as_str_name(&self) -> &'static str {
-        match self {
-            Self::UnspecifedColor => "Unspecifed_Color",
-            Self::White => "White",
-            Self::Yellow => "Yellow",
-            Self::Orange => "Orange",
-            Self::Magenta => "Magenta",
-            Self::Red => "Red",
-            Self::Maroon => "Maroon",
-            Self::Purple => "Purple",
-            Self::DarkBlue => "Dark_Blue",
-            Self::Blue => "Blue",
-            Self::Cyan => "Cyan",
-            Self::Teal => "Teal",
-            Self::Green => "Green",
-            Self::DarkGreen => "Dark_Green",
-            Self::Brown => "Brown",
-        }
-    }
-    /// Creates an enum from field names used in the ProtoBuf definition.
-    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
-        match value {
-            "Unspecifed_Color" => Some(Self::UnspecifedColor),
-            "White" => Some(Self::White),
-            "Yellow" => Some(Self::Yellow),
-            "Orange" => Some(Self::Orange),
-            "Magenta" => Some(Self::Magenta),
-            "Red" => Some(Self::Red),
-            "Maroon" => Some(Self::Maroon),
-            "Purple" => Some(Self::Purple),
-            "Dark_Blue" => Some(Self::DarkBlue),
-            "Blue" => Some(Self::Blue),
-            "Cyan" => Some(Self::Cyan),
-            "Teal" => Some(Self::Teal),
-            "Green" => Some(Self::Green),
-            "Dark_Green" => Some(Self::DarkGreen),
-            "Brown" => Some(Self::Brown),
-            _ => None,
-        }
-    }
-}
-///
-/// Role of the group member
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
-#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-#[repr(i32)]
-pub enum MemberRole {
-    ///
-    /// Unspecifed
-    Unspecifed = 0,
-    ///
-    /// Team Member
-    TeamMember = 1,
-    ///
-    /// Team Lead
-    TeamLead = 2,
-    ///
-    /// Headquarters
-    Hq = 3,
-    ///
-    /// Airsoft enthusiast
-    Sniper = 4,
-    ///
-    /// Medic
-    Medic = 5,
-    ///
-    /// ForwardObserver
-    ForwardObserver = 6,
-    ///
-    /// Radio Telephone Operator
-    Rto = 7,
-    ///
-    /// Doggo
-    K9 = 8,
-}
-impl MemberRole {
-    /// String value of the enum field names used in the ProtoBuf definition.
-    ///
-    /// The values are not transformed in any way and thus are considered stable
-    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
-    pub fn as_str_name(&self) -> &'static str {
-        match self {
-            Self::Unspecifed => "Unspecifed",
-            Self::TeamMember => "TeamMember",
-            Self::TeamLead => "TeamLead",
-            Self::Hq => "HQ",
-            Self::Sniper => "Sniper",
-            Self::Medic => "Medic",
-            Self::ForwardObserver => "ForwardObserver",
-            Self::Rto => "RTO",
-            Self::K9 => "K9",
-        }
-    }
-    /// Creates an enum from field names used in the ProtoBuf definition.
-    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
-        match value {
-            "Unspecifed" => Some(Self::Unspecifed),
-            "TeamMember" => Some(Self::TeamMember),
-            "TeamLead" => Some(Self::TeamLead),
-            "HQ" => Some(Self::Hq),
-            "Sniper" => Some(Self::Sniper),
-            "Medic" => Some(Self::Medic),
-            "ForwardObserver" => Some(Self::ForwardObserver),
-            "RTO" => Some(Self::Rto),
-            "K9" => Some(Self::K9),
-            _ => None,
-        }
-    }
 }
 ///
 /// Canned message module configuration.
@@ -7211,6 +12202,20 @@ pub struct LocalModuleConfig {
     /// Paxcounter Config
     #[prost(message, optional, tag = "14")]
     pub paxcounter: ::core::option::Option<module_config::PaxcounterConfig>,
+    ///
+    /// StatusMessage Config
+    #[prost(message, optional, tag = "15")]
+    pub statusmessage: ::core::option::Option<module_config::StatusMessageConfig>,
+    ///
+    /// The part of the config that is specific to the Traffic Management module
+    #[prost(message, optional, tag = "16")]
+    pub traffic_management: ::core::option::Option<
+        module_config::TrafficManagementConfig,
+    >,
+    ///
+    /// TAK Config
+    #[prost(message, optional, tag = "17")]
+    pub tak: ::core::option::Option<module_config::TakConfig>,
     ///
     /// A version integer used to invalidate old save files when we make
     /// incompatible changes This integer is set at build time and is private to
@@ -7333,6 +12338,10 @@ pub struct UserLite {
     /// This is sent out to other nodes on the mesh to allow them to compute a shared secret key.
     #[prost(bytes = "vec", tag = "7")]
     pub public_key: ::prost::alloc::vec::Vec<u8>,
+    ///
+    /// Whether or not the node can be messaged
+    #[prost(bool, optional, tag = "9")]
+    pub is_unmessagable: ::core::option::Option<bool>,
 }
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
@@ -7391,6 +12400,12 @@ pub struct NodeInfoLite {
     /// Last byte of the node number of the node that should be used as the next hop to reach this node.
     #[prost(uint32, tag = "12")]
     pub next_hop: u32,
+    ///
+    /// Bitfield for storing booleans.
+    /// LSB 0 is_key_manually_verified
+    /// LSB 1 is_muted
+    #[prost(uint32, tag = "13")]
+    pub bitfield: u32,
 }
 ///
 /// This message is never sent over the wire, but it is used for serializing DB
@@ -7450,10 +12465,22 @@ pub struct DeviceState {
     /// The mesh's nodes with their available gpio pins for RemoteHardware module
     #[prost(message, repeated, tag = "13")]
     pub node_remote_hardware_pins: ::prost::alloc::vec::Vec<NodeRemoteHardwarePin>,
+}
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct NodeDatabase {
+    ///
+    /// A version integer used to invalidate old save files when we make
+    /// incompatible changes This integer is set at build time and is private to
+    /// NodeDB.cpp in the device code.
+    #[prost(uint32, tag = "1")]
+    pub version: u32,
     ///
     /// New lite version of NodeDB to decrease memory footprint
-    #[prost(message, repeated, tag = "14")]
-    pub node_db_lite: ::prost::alloc::vec::Vec<NodeInfoLite>,
+    #[prost(message, repeated, tag = "2")]
+    pub nodes: ::prost::alloc::vec::Vec<NodeInfoLite>,
 }
 ///
 /// The on-disk saved channels
@@ -7472,6 +12499,149 @@ pub struct ChannelFile {
     /// NodeDB.cpp in the device code.
     #[prost(uint32, tag = "2")]
     pub version: u32,
+}
+///
+/// The on-disk backup of the node's preferences
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct BackupPreferences {
+    ///
+    /// The version of the backup
+    #[prost(uint32, tag = "1")]
+    pub version: u32,
+    ///
+    /// The timestamp of the backup (if node has time)
+    #[prost(fixed32, tag = "2")]
+    pub timestamp: u32,
+    ///
+    /// The node's configuration
+    #[prost(message, optional, tag = "3")]
+    pub config: ::core::option::Option<LocalConfig>,
+    ///
+    /// The node's module configuration
+    #[prost(message, optional, tag = "4")]
+    pub module_config: ::core::option::Option<LocalModuleConfig>,
+    ///
+    /// The node's channels
+    #[prost(message, optional, tag = "5")]
+    pub channels: ::core::option::Option<ChannelFile>,
+    ///
+    /// The node's user (owner) information
+    #[prost(message, optional, tag = "6")]
+    pub owner: ::core::option::Option<User>,
+}
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct SensorData {
+    /// The message type
+    #[prost(enumeration = "MessageType", tag = "1")]
+    pub r#type: i32,
+    /// The sensor data, either as a float or an uint32
+    #[prost(oneof = "sensor_data::Data", tags = "2, 3")]
+    pub data: ::core::option::Option<sensor_data::Data>,
+}
+/// Nested message and enum types in `SensorData`.
+pub mod sensor_data {
+    /// The sensor data, either as a float or an uint32
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(Clone, Copy, PartialEq, ::prost::Oneof)]
+    pub enum Data {
+        #[prost(float, tag = "2")]
+        FloatValue(f32),
+        #[prost(uint32, tag = "3")]
+        Uint32Value(u32),
+    }
+}
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct InterdeviceMessage {
+    /// The message data
+    #[prost(oneof = "interdevice_message::Data", tags = "1, 2")]
+    pub data: ::core::option::Option<interdevice_message::Data>,
+}
+/// Nested message and enum types in `InterdeviceMessage`.
+pub mod interdevice_message {
+    /// The message data
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Data {
+        #[prost(string, tag = "1")]
+        Nmea(::prost::alloc::string::String),
+        #[prost(message, tag = "2")]
+        Sensor(super::SensorData),
+    }
+}
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum MessageType {
+    Ack = 0,
+    /// in ms
+    CollectInterval = 160,
+    /// duration ms
+    BeepOn = 161,
+    /// cancel prematurely
+    BeepOff = 162,
+    Shutdown = 163,
+    PowerOn = 164,
+    Scd41Temp = 176,
+    Scd41Humidity = 177,
+    Scd41Co2 = 178,
+    Aht20Temp = 179,
+    Aht20Humidity = 180,
+    TvocIndex = 181,
+}
+impl MessageType {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::Ack => "ACK",
+            Self::CollectInterval => "COLLECT_INTERVAL",
+            Self::BeepOn => "BEEP_ON",
+            Self::BeepOff => "BEEP_OFF",
+            Self::Shutdown => "SHUTDOWN",
+            Self::PowerOn => "POWER_ON",
+            Self::Scd41Temp => "SCD41_TEMP",
+            Self::Scd41Humidity => "SCD41_HUMIDITY",
+            Self::Scd41Co2 => "SCD41_CO2",
+            Self::Aht20Temp => "AHT20_TEMP",
+            Self::Aht20Humidity => "AHT20_HUMIDITY",
+            Self::TvocIndex => "TVOC_INDEX",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "ACK" => Some(Self::Ack),
+            "COLLECT_INTERVAL" => Some(Self::CollectInterval),
+            "BEEP_ON" => Some(Self::BeepOn),
+            "BEEP_OFF" => Some(Self::BeepOff),
+            "SHUTDOWN" => Some(Self::Shutdown),
+            "POWER_ON" => Some(Self::PowerOn),
+            "SCD41_TEMP" => Some(Self::Scd41Temp),
+            "SCD41_HUMIDITY" => Some(Self::Scd41Humidity),
+            "SCD41_CO2" => Some(Self::Scd41Co2),
+            "AHT20_TEMP" => Some(Self::Aht20Temp),
+            "AHT20_HUMIDITY" => Some(Self::Aht20Humidity),
+            "TVOC_INDEX" => Some(Self::TvocIndex),
+            _ => None,
+        }
+    }
 }
 ///
 /// This message wraps a MeshPacket with extra metadata about the sender and how it arrived.
@@ -7556,6 +12726,11 @@ pub struct MapReport {
     /// Number of online nodes (heard in the last 2 hours) this node has in its list that were received locally (not via MQTT)
     #[prost(uint32, tag = "13")]
     pub num_online_local_nodes: u32,
+    ///
+    /// User has opted in to share their location (map report) with the mqtt server
+    /// Controlled by map_report.should_report_location
+    #[prost(bool, tag = "14")]
+    pub has_opted_report_location: bool,
 }
 ///
 /// TODO: REPLACE
@@ -7918,6 +13093,158 @@ pub struct RtttlConfig {
     /// Ringtone for PWM Buzzer in RTTTL Format.
     #[prost(string, tag = "1")]
     pub ringtone: ::prost::alloc::string::String,
+}
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SerialHalCommand {
+    /// Host-assigned request id. Replies echo this id back in
+    /// SerialHalResponse.transaction_id.
+    #[prost(uint32, tag = "1")]
+    pub transaction_id: u32,
+    #[prost(enumeration = "serial_hal_command::Type", tag = "2")]
+    pub r#type: i32,
+    #[prost(uint32, tag = "3")]
+    pub pin: u32,
+    #[prost(uint32, tag = "4")]
+    pub value: u32,
+    #[prost(uint32, tag = "5")]
+    pub mode: u32,
+    #[prost(bytes = "vec", tag = "6")]
+    pub data: ::prost::alloc::vec::Vec<u8>,
+}
+/// Nested message and enum types in `SerialHalCommand`.
+pub mod serial_hal_command {
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum Type {
+        Unset = 0,
+        PinMode = 1,
+        DigitalWrite = 2,
+        DigitalRead = 3,
+        AttachInterrupt = 4,
+        DetachInterrupt = 5,
+        SpiTransfer = 6,
+        Noop = 7,
+    }
+    impl Type {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Unset => "UNSET",
+                Self::PinMode => "PIN_MODE",
+                Self::DigitalWrite => "DIGITAL_WRITE",
+                Self::DigitalRead => "DIGITAL_READ",
+                Self::AttachInterrupt => "ATTACH_INTERRUPT",
+                Self::DetachInterrupt => "DETACH_INTERRUPT",
+                Self::SpiTransfer => "SPI_TRANSFER",
+                Self::Noop => "NOOP",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "UNSET" => Some(Self::Unset),
+                "PIN_MODE" => Some(Self::PinMode),
+                "DIGITAL_WRITE" => Some(Self::DigitalWrite),
+                "DIGITAL_READ" => Some(Self::DigitalRead),
+                "ATTACH_INTERRUPT" => Some(Self::AttachInterrupt),
+                "DETACH_INTERRUPT" => Some(Self::DetachInterrupt),
+                "SPI_TRANSFER" => Some(Self::SpiTransfer),
+                "NOOP" => Some(Self::Noop),
+                _ => None,
+            }
+        }
+    }
+}
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+#[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SerialHalResponse {
+    /// Matches the originating SerialHalCommand.transaction_id for normal
+    /// request/response traffic.
+    ///
+    /// A value of 0 indicates an unsolicited interrupt notification generated by
+    /// the device. In that case, the host should interpret value as the GPIO pin
+    /// that triggered.
+    #[prost(uint32, tag = "1")]
+    pub transaction_id: u32,
+    #[prost(enumeration = "serial_hal_response::Result", tag = "2")]
+    pub result: i32,
+    /// Used by DIGITAL_READ replies and interrupt notifications. For interrupt
+    /// notifications (transaction_id == 0), this carries the pin number.
+    #[prost(uint32, tag = "3")]
+    pub value: u32,
+    #[prost(bytes = "vec", tag = "4")]
+    pub data: ::prost::alloc::vec::Vec<u8>,
+    #[prost(string, tag = "5")]
+    pub error: ::prost::alloc::string::String,
+}
+/// Nested message and enum types in `SerialHalResponse`.
+pub mod serial_hal_response {
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
+    #[cfg_attr(feature = "ts-gen", derive(specta::Type))]
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum Result {
+        Ok = 0,
+        Error = 1,
+        BadRequest = 2,
+        Unsupported = 3,
+    }
+    impl Result {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Ok => "OK",
+                Self::Error => "ERROR",
+                Self::BadRequest => "BAD_REQUEST",
+                Self::Unsupported => "UNSUPPORTED",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "OK" => Some(Self::Ok),
+                "ERROR" => Some(Self::Error),
+                "BAD_REQUEST" => Some(Self::BadRequest),
+                "UNSUPPORTED" => Some(Self::Unsupported),
+                _ => None,
+            }
+        }
+    }
 }
 ///
 /// TODO: REPLACE
