@@ -146,6 +146,10 @@ pub fn spawn_processing_handler(
 
     spawn(async move {
         tokio::select! {
+            // Cancelling stops the read handler, which closes the channel this handler reads.
+            // Both branches are then ready, and an unbiased pick reports a clean shutdown as an
+            // unexpected termination.
+            biased;
             _ = cancellation_token.cancelled() => {
                 debug!("Message processing handler cancelled");
                 Ok(())
